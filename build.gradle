@@ -1,0 +1,95 @@
+tasks.register('loadpg') {
+    description = 'load postgres container to kube'
+    group = "container"
+    doLast {
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'src/pgs/pg-config.yml'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'src/pgs/pg-volume.yml'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'src/pgs/pg-service.yml'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'src/pgs/pg-deploy.yml'
+        }
+    }
+}
+
+tasks.register('deletepg') {
+    description = 'delete postgres kube resources'
+    group = "container"
+    doLast {
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'delete', 'configMap', 'postgres-config'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'delete', 'service', 'postgres'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'delete', 'deploy', 'postgres'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'delete', 'pvc', 'postgres-pv-claim'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'delete', 'pv', 'postgres-pv-volume'
+        }
+    }
+}
+
+tasks.register('loadsq') {
+    description = 'load postgres container to kube'
+    group = "container"
+    doLast {
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'src/sq/sq-config.yml'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'src/sq/sq-volume.yml'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'src/sq/sq-service.yml'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'src/sq/sq-deploy.yml'
+        }
+    }
+}
+
+tasks.register('deletesq') {
+    description = 'delete postgres kube resources'
+    group = "container"
+    doLast {
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'delete', 'configMap', 'sonar-config'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'delete', 'service', 'sonar'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'delete', 'deploy', 'sonar'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'delete', 'pvc', 'sonar-pvc'
+        }
+    }
+}

@@ -1,0 +1,16 @@
+# posgres service
+# https://www.airplane.dev/blog/deploy-postgres-on-kubernetes
+# https://severalnines.com/blog/using-kubernetes-deploy-postgresql
+# https://docs.vmware.com/en/VMware-SQL-with-Postgres-for-Kubernetes/1.9/tanzu-postgres-k8s/GUID-accessing.html
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres # Sets service name
+  labels:
+    app: postgres # Labels and Selectors
+spec:
+  type: NodePort # Sets service type
+  ports:
+    - port: 5432 # Sets port to run the postgres application
+  selector:
+    app: postgres
