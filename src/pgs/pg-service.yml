@@ -12,5 +12,6 @@ spec:
   type: NodePort # Sets service type
   ports:
     - port: 5432 # Sets port to run the postgres application
+      nodePort: 31032
   selector:
     app: postgres

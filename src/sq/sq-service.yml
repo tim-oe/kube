@@ -10,6 +10,7 @@ spec:
   type: NodePort
   ports:
   - port: 9000
+    nodePort: 31900
     name: sonar
   selector:
     app: sonar
