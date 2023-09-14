@@ -93,3 +93,22 @@ tasks.register('deletesq') {
         }
     }
 }
+
+tasks.register('loadjenkins') {
+    description = 'load postgres container to kube'
+    group = "container"
+    doLast {
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'src/jenkins/jenkins-volume.yml'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'src/jenkins/jenkins-deploy.yml'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'src/jenkins/jenkins-service.yml'
+        }
+    }
+}

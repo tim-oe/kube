@@ -1,3 +1,5 @@
+# https://hub.docker.com/_/sonarqube/
+# https://serverfault.com/questions/956361/kubernetes-docker-and-vm-max-map-count
 apiVersion: apps/v1
 kind: Deployment
 metadata:

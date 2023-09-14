@@ -1,7 +1,4 @@
 # posgres service
-# https://www.airplane.dev/blog/deploy-postgres-on-kubernetes
-# https://severalnines.com/blog/using-kubernetes-deploy-postgresql
-# https://docs.vmware.com/en/VMware-SQL-with-Postgres-for-Kubernetes/1.9/tanzu-postgres-k8s/GUID-accessing.html
 apiVersion: v1
 kind: Service
 metadata:
