@@ -19,6 +19,16 @@ spec:
       labels:
         app: sonar
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values:
+                - amd64
+                - arm64
       initContainers:
       - name: init
         image: busybox
@@ -54,3 +64,5 @@ spec:
       - name: app-pvc
         persistentVolumeClaim:
           claimName: sonar-pvc
+      nodeSelector:
+        kubernetes.io/os: linux

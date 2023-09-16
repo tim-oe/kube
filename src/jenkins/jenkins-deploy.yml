@@ -12,6 +12,16 @@ spec:
       labels:
         app: jenkins
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values:
+                - amd64
+                - arm64
       containers:
         - name: jenkins
           # 
@@ -26,3 +36,5 @@ spec:
         - name: jenkins-home
           persistentVolumeClaim:
             claimName: jenkins-home
+      nodeSelector:
+        kubernetes.io/os: linux
