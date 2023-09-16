@@ -6,6 +6,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: postgres  # Sets Deployment name
+  namespace: sonar
 spec:
   replicas: 1
   selector:

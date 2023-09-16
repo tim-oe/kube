@@ -1,103 +1,62 @@
-tasks.register('loadpg') {
+
+tasks.register('loadsonar') {
     description = 'load postgres container to kube'
     group = "container"
     doLast {
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/pgs/pg-config.yml'
+            commandLine 'kubectl', 'apply', '-f', 'src/sonar/sonar-namespace.yml'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/pgs/pg-volume.yml'
+            commandLine 'kubectl', 'apply', '-f', 'src/sonar/pg-config.yml'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/pgs/pg-service.yml'
+            commandLine 'kubectl', 'apply', '-f', 'src/sonar/pg-volume.yml'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/pgs/pg-deploy.yml'
+            commandLine 'kubectl', 'apply', '-f', 'src/sonar/pg-service.yml'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'src/sonar/pg-deploy.yml'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'src/sonar/sq-config.yml'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'src/sonar/sq-volume.yml'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'src/sonar/sq-service.yml'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'src/sonar/sq-deploy.yml'
         }
     }
 }
 
-tasks.register('deletepg') {
+tasks.register('deletesonar', GradleBuild) {
     description = 'delete postgres kube resources'
     group = "container"
-    doLast {
-        exec {
-            workingDir '.'
-            commandLine 'kubectl', 'delete', 'configMap', 'postgres-config'
-        }
-        exec {
-            workingDir '.'
-            commandLine 'kubectl', 'delete', 'service', 'postgres'
-        }
-        exec {
-            workingDir '.'
-            commandLine 'kubectl', 'delete', 'deploy', 'postgres'
-        }
-        exec {
-            workingDir '.'
-            commandLine 'kubectl', 'delete', 'pvc', 'postgres-pv-claim'
-        }
-        exec {
-            workingDir '.'
-            commandLine 'kubectl', 'delete', 'pv', 'postgres-pv-volume'
-        }
-    }
-}
-
-tasks.register('loadsq') {
-    description = 'load postgres container to kube'
-    group = "container"
-    doLast {
-        exec {
-            workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/sq/sq-config.yml'
-        }
-        exec {
-            workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/sq/sq-volume.yml'
-        }
-        exec {
-            workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/sq/sq-service.yml'
-        }
-        exec {
-            workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/sq/sq-deploy.yml'
-        }
-    }
-}
-
-tasks.register('deletesq') {
-    description = 'delete postgres kube resources'
-    group = "container"
-    doLast {
-        exec {
-            workingDir '.'
-            commandLine 'kubectl', 'delete', 'configMap', 'sonar-config'
-        }
-        exec {
-            workingDir '.'
-            commandLine 'kubectl', 'delete', 'service', 'sonar'
-        }
-        exec {
-            workingDir '.'
-            commandLine 'kubectl', 'delete', 'deploy', 'sonar'
-        }
-        exec {
-            workingDir '.'
-            commandLine 'kubectl', 'delete', 'pvc', 'sonar-pvc'
-        }
-    }
+    startParameter.projectProperties = ['namespace':'sonar']
+    tasks = ['deleteAll']
 }
 
 tasks.register('loadjenkins') {
     description = 'load postgres container to kube'
     group = "container"
     doLast {
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'src/jenkins/jenkins-namespace.yml'
+        }
         exec {
             workingDir '.'
             commandLine 'kubectl', 'apply', '-f', 'src/jenkins/jenkins-volume.yml'
@@ -109,6 +68,53 @@ tasks.register('loadjenkins') {
         exec {
             workingDir '.'
             commandLine 'kubectl', 'apply', '-f', 'src/jenkins/jenkins-service.yml'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'src/jenkins/jenkins-ingress.yml'
+        }
+    }
+}
+
+tasks.register('deletejenkins', GradleBuild) {
+    description = 'delete jenkins kube resources'
+    group = "container"
+    startParameter.projectProperties = ['namespace':'jenkins']
+    tasks = ['deleteAll']
+}
+
+tasks.register('jenkinssecret') {
+    description = 'get initial jenkins password'
+    group = "container"
+    doLast {
+        if (project.hasProperty('jenkins_pod')) {
+            exec {
+                workingDir '.'
+                commandLine 'bash', '-c',
+                'kubectl -n=jenkins exec -it ' + "${jenkins_pod}" + ' -- cat /var/jenkins_home/secrets/initialAdminPassword'
+            }
+        } else {
+            println "need to set -Pjenkins_pod=[pod name]"
+        }
+    }
+}
+
+tasks.register('deleteAll') {
+    doLast {
+        if (project.hasProperty('namespace')) {
+            exec {
+                workingDir '.'
+                commandLine 'bash', '-c',
+                    'kubectl ' + "-n=${namespace}" + ' delete all --all' 
+            }
+            exec {
+                workingDir '.'
+                commandLine 'bash', '-c',
+                    'kubectl api-resources --verbs=list --namespaced -o name ' +
+                    '| xargs -i kubectl ' + "-n=${namespace}" + ' delete {} --all'        
+            }
+        } else {
+            println "need to set -Pnamespace=[resource namespace]"
         }
     }
 }

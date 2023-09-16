@@ -2,13 +2,14 @@ kind: PersistentVolume
 apiVersion: v1
 metadata:
   name: postgres-pv-volume  # Sets PV's name
+  namespace: sonar
   labels:
     type: local  # Sets PV's type to local
     app: postgres
 spec:
   storageClassName: standard
   capacity:
-    storage: 5Gi # Sets PV Volume
+    storage: 6Gi # Sets PV Volume
   accessModes:
     - ReadWriteMany
   hostPath:
@@ -18,6 +19,7 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: postgres-pv-claim  # Sets name of PVC
+  namespace: sonar
   labels:
     app: postgres
 spec:
@@ -26,4 +28,4 @@ spec:
     - ReadWriteMany  # Sets read and write access
   resources:
     requests:
-      storage: 5Gi  # Sets volume size
+      storage: 4Gi  # Sets volume size

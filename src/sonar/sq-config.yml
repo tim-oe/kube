@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: sonar-config
-  #namespace: sonar
+  namespace: sonar
   labels:
     app: sonar
 data:
