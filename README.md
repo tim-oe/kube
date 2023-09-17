@@ -18,12 +18,11 @@
 
 ## jenkins
 - [jenkins recomended setup](https://www.jenkins.io/doc/book/installing/kubernetes/)
-    - did not get working made simplified version based on kompose output
+    - did not get working made simplified version based on kompose output and much googling
 
 ## ingress
 - [on minkube](https://kubernetes.io/docs/tasks/access-application-cluster/ingress-minikube/)
-- still work in progress
+- [gloomed working version](https://stackoverflow.com/questions/51751462/nginx-ingress-jenkins-path-rewrite-configuration-not-working)
 
 ## TODO
-- ingress still
 - deploy to eks

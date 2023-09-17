@@ -1,4 +1,3 @@
-
 tasks.register('loadsonar') {
     description = 'load postgres container to kube'
     group = "container"
@@ -38,6 +37,10 @@ tasks.register('loadsonar') {
         exec {
             workingDir '.'
             commandLine 'kubectl', 'apply', '-f', 'src/sonar/sq-deploy.yml'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'src/sonar/sq-ingress.yml'
         }
     }
 }
@@ -112,6 +115,11 @@ tasks.register('deleteAll') {
                 commandLine 'bash', '-c',
                     'kubectl api-resources --verbs=list --namespaced -o name ' +
                     '| xargs -i kubectl ' + "-n=${namespace}" + ' delete {} --all'        
+            }
+            exec {
+                workingDir '.'
+                commandLine 'bash', '-c',
+                    'kubectl delete namespace ' + "${namespace}" 
             }
         } else {
             println "need to set -Pnamespace=[resource namespace]"

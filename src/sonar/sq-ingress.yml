@@ -4,18 +4,18 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/add-base-url: "true"
-  name: jenkins-ingress
-  namespace: jenkins
+  name: sonar-ingress
+  namespace: sonar
 spec:
   ingressClassName: nginx
   rules:
-  - host:  jenkins.tec.net
+  - host:  sonar.tec.net
     http:
       paths:
       - pathType: Prefix
         path: /
         backend:
           service:
-            name: jenkins
+            name: sonar
             port:
-              number: 8080
+              number: 9000
