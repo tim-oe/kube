@@ -1,0 +1,44 @@
+# hack for issue with service not finding the network interfacr
+# this forces service on eth0
+# it also makes sure SSH is running
+# https://askubuntu.com/questions/1217252/boot-process-hangs-at-systemd-networkd-wait-online
+---
+- name: hack systemd-networkd-wait-online to use eth0
+  hosts: kube_cluster
+  become: true
+  become_user: root
+  vars:
+    svc: systemd-networkd-wait-online
+  tasks: 
+    - name: Create override directory
+      file:
+        owner: root
+        group: root
+        mode: 0755
+        path: "/etc/systemd/system/{{ svc }}.service.d"
+        state: directory
+    - name: create override file
+      community.general.ini_file:
+        dest: "/etc/systemd/system/{{ svc }}.service.d/override.conf"
+        owner: root
+        group: root
+        mode: 0644
+        section: Service
+        option: ExecStart
+        value: ""
+        exclusive: false # this is needed to allow 2 execStart
+    - name: set exec start full command
+      community.general.ini_file:
+        dest: "/etc/systemd/system/{{ svc }}.service.d/override.conf"
+        section: Service
+        option: ExecStart
+        value: "/usr/lib/systemd/{{ svc }} --interface=eth0"
+        exclusive: false
+    - name: gather service facts
+      ansible.builtin.service_facts:
+    - name: start and enable ssh
+      systemd:
+        name: ssh
+        state: started
+        enabled: true
+      when: ansible_facts.services['ssh.service'] is defined and ansible_facts.services['ssh.service'].state != 'running'

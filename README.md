@@ -22,7 +22,7 @@
 
 ## ingress
 - [on minkube](https://kubernetes.io/docs/tasks/access-application-cluster/ingress-minikube/)
-- [gloomed working version](https://stackoverflow.com/questions/51751462/nginx-ingress-jenkins-path-rewrite-configuration-not-working)
+- got a working version [here]](https://stackoverflow.com/questions/51751462/nginx-ingress-jenkins-path-rewrite-configuration-not-working)
 
 ## TODO
 - deploy to eks

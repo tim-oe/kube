@@ -1,0 +1,18 @@
+---
+- name: Setup swapfile
+  hosts: kube_cluster
+  become: true
+  become_user: root
+  vars:
+    sf: /swapfile
+  tasks:
+    - name: Create the file to be used for swap
+      command: "fallocate -l 8G {{ sf }}"
+    - name: Format the file for swap
+      command: "mkswap {{ sf }}"
+    - name: change swap file permissions
+      file: "path={{ sf }} owner=root group=root mode=0600"
+    - name: add the file to the system as a swap file
+      command: "swapon {{ sf }}"
+    - name: write swap entry in fstab
+      mount: "name=none src={{ sf }} fstype=swap opts=sw passno=0 dump=0 state=present"
