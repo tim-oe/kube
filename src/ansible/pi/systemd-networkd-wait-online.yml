@@ -4,7 +4,7 @@
 # https://askubuntu.com/questions/1217252/boot-process-hangs-at-systemd-networkd-wait-online
 ---
 - name: hack systemd-networkd-wait-online to use eth0
-  hosts: kube_cluster
+  hosts: all
   become: true
   become_user: root
   vars:

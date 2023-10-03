@@ -1,6 +1,6 @@
 ---
 - name: Initialize kube node
-  hosts: kube_cluster
+  hosts: all
   become: true
   become_user: root
   tasks: 

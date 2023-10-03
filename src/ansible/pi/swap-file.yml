@@ -1,6 +1,6 @@
 ---
 - name: Setup swapfile
-  hosts: kube_cluster
+  hosts: all
   become: true
   become_user: root
   vars:

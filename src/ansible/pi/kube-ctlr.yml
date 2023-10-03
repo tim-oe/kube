@@ -1,0 +1,26 @@
+# https://anthonynsimon.com/blog/kubernetes-cluster-raspberry-pi/#what-is-k3s-and-how-is-it-different-than-kubernetes
+# http://armand.nz/notes/k3s/Kubernetes%20Cluster%20on%20Raspberry%20Pi%20using%20Ubuntu%2022.04%20LTS%20and%20K3s
+# https://docs.k3s.io/installation/uninstall
+---
+- name: setup kube controller node
+  hosts: kube_controller
+  become: true
+  become_user: root
+  vars:
+    cmd_file: /boot/firmware/cmdline.txt
+    k3s_install : /opt/k3ssetup
+  tasks:
+    - ansible.builtin.name: call common tasks
+      ansible.builtin.import_tasks:
+        file: kube-common.yml
+    - name: gather service facts
+      ansible.builtin.service_facts:
+    - name: Download k3s script.
+      get_url:
+        url: https://get.k3s.io 
+        dest: "{{ k3s_install }}"
+        mode: 700
+      when: ansible_facts.services['k3s.service'] is undefined
+    - name: Install k3s.
+      shell: "{{ k3s_install }}"
+      when: ansible_facts.services['k3s.service'] is undefined
