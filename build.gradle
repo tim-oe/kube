@@ -102,6 +102,58 @@ tasks.register('jenkinssecret') {
     }
 }
 
+// https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/
+// https://github.com/kubernetes/dashboard/blob/master/docs/user/access-control/creating-sample-user.md
+tasks.register('loaddashboard') {
+    description = 'load postgres container to kube'
+    group = "container"
+    doLast {
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'create', 'namespace', 'kubernetes-dashboard'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml',
+                '-n', 'kubernetes-dashboard'
+
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'src/dashboard/dashboard-adminuser.yml'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'src/dashboard/adminuser-rolebinding.yml'
+        }
+       
+        exec {
+            workingDir '.'
+            commandLine 'bash', '-c',
+                'kubectl get secret admin-user -n kubernetes-dashboard -o jsonpath={".data.token"} | base64 -d'
+        }
+    }
+}
+
+tasks.register('dashboadtoken') {
+    description = 'get login token'
+    group = "container"
+    doLast {
+        exec {
+            workingDir '.'
+            commandLine 'bash', '-c',
+                'kubectl get secret admin-user -n kubernetes-dashboard -o jsonpath={".data.token"} | base64 -d'
+        }
+    }
+}
+
+tasks.register('deletedashboard', GradleBuild) {
+    description = 'delete jenkins kube resources'
+    group = "container"
+    startParameter.projectProperties = ['namespace':'kubernetes-dashboard']
+    tasks = ['deleteAll']
+}
+
 tasks.register('deleteAll') {
     doLast {
         if (project.hasProperty('namespace')) {
