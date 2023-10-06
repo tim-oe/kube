@@ -4,43 +4,43 @@ tasks.register('loadsonar') {
     doLast {
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/sonar/sonar-namespace.yml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sonar-namespace.yml'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/sonar/pg-config.yml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/pg-config.yml'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/sonar/pg-volume.yml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/pg-volume.yml'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/sonar/pg-service.yml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/pg-service.yml'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/sonar/pg-deploy.yml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/pg-deploy.yml'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/sonar/sq-config.yml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sq-config.yml'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/sonar/sq-volume.yml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sq-volume.yml'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/sonar/sq-service.yml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sq-service.yml'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/sonar/sq-deploy.yml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sq-deploy.yml'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/sonar/sq-ingress.yml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sq-ingress.yml'
         }
     }
 }
@@ -58,23 +58,23 @@ tasks.register('loadjenkins') {
     doLast {
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/jenkins/jenkins-namespace.yml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/jenkins/jenkins-namespace.yml'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/jenkins/jenkins-volume.yml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/jenkins/jenkins-volume.yml'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/jenkins/jenkins-deploy.yml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/jenkins/jenkins-deploy.yml'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/jenkins/jenkins-service.yml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/jenkins/jenkins-service.yml'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/jenkins/jenkins-ingress.yml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/jenkins/jenkins-ingress.yml'
         }
     }
 }
@@ -120,11 +120,11 @@ tasks.register('loaddashboard') {
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/dashboard/dashboard-adminuser.yml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/dashboard/dashboard-adminuser.yml'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/dashboard/adminuser-rolebinding.yml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/dashboard/adminuser-rolebinding.yml'
         }
        
         exec {

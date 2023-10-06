@@ -1,4 +1,18 @@
-# kube stuff
+# kubernetes workbench
+![lpi cluster](docs/img/pi-kube.jpg?raw=true)
+
+## goal
+- create a home managable kubernetes cluster beyond mimkube
+- become familiur with different deployment mechanisms
+    - kuubectl
+    - helm
+    - terraform
+- migrate docker home services to kubg
+
+## history
+I got an initial setup of docker run services on a desktop system
+
+## kube stuff
 - [kube docs](https://kubernetes.io/docs/home/)
 - [minikube](https://minikube.sigs.k8s.io/docs/)
     - used for local testing/dev
@@ -22,7 +36,7 @@
 
 ## ingress
 - [on minkube](https://kubernetes.io/docs/tasks/access-application-cluster/ingress-minikube/)
-- got a working version [here]](https://stackoverflow.com/questions/51751462/nginx-ingress-jenkins-path-rewrite-configuration-not-working)
+- got a working version [here](https://stackoverflow.com/questions/51751462/nginx-ingress-jenkins-path-rewrite-configuration-not-working)
 
 ## TODO
 - deploy to eks
