@@ -120,13 +120,9 @@ tasks.register('loaddashboard') {
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/kube/dashboard/dashboard-adminuser.yml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/dashboard/admin-user.yml'
         }
-        exec {
-            workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/kube/dashboard/adminuser-rolebinding.yml'
-        }
-       
+        // dump token       
         exec {
             workingDir '.'
             commandLine 'bash', '-c',
@@ -152,6 +148,20 @@ tasks.register('deletedashboard', GradleBuild) {
     group = "container"
     startParameter.projectProperties = ['namespace':'kubernetes-dashboard']
     tasks = ['deleteAll']
+    doLast {
+        exec {
+            workingDir '.'
+            ignoreExitValue true
+            commandLine 'kubectl', 'delete', 'serviceAccounts', 
+            '-n', 'kubernetes-dashboard', 'admin-user'
+        }
+        exec {
+            workingDir '.'
+            ignoreExitValue true
+            commandLine 'kubectl', 'delete', 'ClusterRoleBinding', 
+            '-n', 'kubernetes-dashboard', 'admin-user'
+        }
+    }
 }
 
 tasks.register('deleteAll') {
@@ -170,6 +180,7 @@ tasks.register('deleteAll') {
             }
             exec {
                 workingDir '.'
+                ignoreExitValue true
                 commandLine 'bash', '-c',
                     'kubectl delete namespace ' + "${namespace}" 
             }
