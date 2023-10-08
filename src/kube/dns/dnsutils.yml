@@ -13,4 +13,11 @@ spec:
       - sleep
       - "3600"
     imagePullPolicy: IfNotPresent
+    resources:
+      requests:
+        cpu: "1"
+        memory: "128Mi"
+      limits:
+        cpu: "1"
+        memory: "256Mi"
   restartPolicy: Always

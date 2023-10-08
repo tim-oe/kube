@@ -9,7 +9,7 @@ metadata:
 spec:
   storageClassName: standard
   capacity:
-    storage: 6Gi # Sets PV Volume
+    storage: 2Gi # Sets PV Volume
   accessModes:
     - ReadWriteMany
   hostPath:
@@ -28,4 +28,4 @@ spec:
     - ReadWriteMany  # Sets read and write access
   resources:
     requests:
-      storage: 4Gi  # Sets volume size
+      storage: 2Gi  # Sets volume size

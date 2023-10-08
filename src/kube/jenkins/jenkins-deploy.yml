@@ -25,7 +25,6 @@ spec:
                 - arm64
       containers:
         - name: jenkins
-          # 
           image: jenkins/jenkins:lts-jdk17
           imagePullPolicy: "IfNotPresent"
           ports:
@@ -33,6 +32,13 @@ spec:
           volumeMounts:
             - mountPath: var/jenkins_home
               name: jenkins-home
+          resources:
+            requests:
+              cpu: "1"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "2048Mi"
       volumes:
         - name: jenkins-home
           persistentVolumeClaim:

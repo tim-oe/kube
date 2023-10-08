@@ -102,6 +102,28 @@ tasks.register('jenkinssecret') {
     }
 }
 
+tasks.register('loaddnsutils') {
+    description = 'load dnsutils container to kube'
+    group = "container"
+    doLast {
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/dns/dnsutils.yml'
+        }
+    }
+}
+
+tasks.register('deletednsutils') {
+    description = 'delete dnsutils container to kube'
+    group = "container"
+    doLast {
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'delete', 'pod', 'dnsutils'
+        }
+    }
+}
+
 // https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/
 // https://github.com/kubernetes/dashboard/blob/master/docs/user/access-control/creating-sample-user.md
 tasks.register('loaddashboard') {

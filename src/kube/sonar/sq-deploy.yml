@@ -59,6 +59,7 @@ spec:
           requests:
             memory: "1024Mi"
           limits:
+            cpu: "1"
             memory: "2048Mi"
       volumes:
       - name: app-pvc
