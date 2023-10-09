@@ -22,7 +22,6 @@ resource "helm_release" "kubernetes_dashboard" {
   name             = "kubernetes-dashboard"
   repository       = "https://kubernetes.github.io/dashboard/"
   chart            = "kubernetes-dashboard"
-  create_namespace = true
   namespace        = "kubernetes-dashboard"
 
   depends_on = [kubernetes_namespace.kubernetes_dashboard]

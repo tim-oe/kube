@@ -133,7 +133,7 @@
       when: eth1_led.found == 0
     - name: Reboot the box if changes applied.
       reboot:
-        msg: "Reboot initiated by Ansible for device changes"
+        msg: "Reboot initiated by Ansible for firmware changes"
         connect_timeout: 5
         reboot_timeout: 300
         pre_reboot_delay: 0

@@ -3,40 +3,41 @@
 # it also makes sure SSH is running
 # https://askubuntu.com/questions/1217252/boot-process-hangs-at-systemd-networkd-wait-online
 ---
-- name: hack systemd-networkd-wait-online to use eth0
+- name: Hack systemd-networkd-wait-online to use eth0.
   hosts: all
   become: true
   become_user: root
   vars:
     svc: systemd-networkd-wait-online
-  tasks: 
-    - name: Create override directory
+  tasks:
+    - name: Create override directory.
       file:
         owner: root
         group: root
-        mode: 0755
+        mode: "0755"
         path: "/etc/systemd/system/{{ svc }}.service.d"
         state: directory
-    - name: create override file
+    - name: Create override file.
       community.general.ini_file:
         dest: "/etc/systemd/system/{{ svc }}.service.d/override.conf"
         owner: root
         group: root
-        mode: 0644
+        mode: 644
         section: Service
         option: ExecStart
         value: ""
         exclusive: false # this is needed to allow 2 execStart
-    - name: set exec start full command
+    - name: Set exec start full command.
       community.general.ini_file:
         dest: "/etc/systemd/system/{{ svc }}.service.d/override.conf"
+        mode: 644
         section: Service
         option: ExecStart
         value: "/usr/lib/systemd/{{ svc }} --interface=eth0"
         exclusive: false
-    - name: gather service facts
+    - name: Gather service facts.
       ansible.builtin.service_facts:
-    - name: start and enable ssh
+    - name: Start and enable ssh.
       systemd:
         name: ssh
         state: started
