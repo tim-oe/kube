@@ -29,6 +29,7 @@
   - translate docker -> kube not always helpfull
 - see gradle scripts for some useful commands
 - [K3S](https://docs.k3s.io/)
+- [local-path pv and pvc](https://github.com/rancher/local-path-provisioner)
 
 ### terraform
 

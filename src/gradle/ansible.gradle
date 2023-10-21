@@ -1,0 +1,11 @@
+tasks.register('anskubemnt') {
+    description = 'run ansible kube mount scripts'
+    group = "ansible"
+    doLast {
+        exec {
+            workingDir '.'
+            commandLine 'ansible-playbook', '-i', 
+                'tec-kube-n1,tec-kube-n2,tec-kube-n3,', 'src/ansible/pi/kube-mnt.yml'
+        }
+    }
+}

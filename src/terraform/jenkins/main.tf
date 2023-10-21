@@ -12,32 +12,43 @@ resource "kubernetes_namespace" "jenkins" {
   }
 }
 
-resource "kubernetes_persistent_volume" "jenkins_pv" {
-  metadata {
-    name = "jenkins-pv"
+# pv are global...
+# resource "kubernetes_persistent_volume" "jenkins_pv" {
+#   metadata {
+#     name = "jenkins-pv"
+#     labels = {
+#       type = "local"
+#     }
+#   }
+ 
+#   spec {
+#     capacity = {
+#       storage = "2Gi"
+#     }
+#     access_modes = ["ReadWriteOnce"]
+#     storage_class_name = "local-path"
+#     persistent_volume_source {
+#       local  {
+#       }
+#     }
+#     node_affinity {
+#       required {
+#         node_selector_term {
+#           match_expressions {
+#             key      = "kubernetes.io/hostname"
+#             operator = "In"
+#             values   = ["tec-kube-n1", "tec-kube-n2", "tec-kube-n3"]
+#           }
+#         }
+#       }
+#     }
+#   }
+#   depends_on = [kubernetes_namespace.jenkins]
+# }
 
-    labels = {
-      namespace = "jenkins"
-      type = "local"
-    }
-  }
-  spec {
-    capacity = {
-      storage = "2Gi"
-    }
-    access_modes = ["ReadWriteMany"]
-    persistent_volume_source {
-      host_path  {
-        path  = "/mnt/data"
-      }
-    }
-  }
-  depends_on = [kubernetes_namespace.jenkins]
-}
-
-resource "kubernetes_persistent_volume_claim" "jenkins_home" {
+resource "kubernetes_persistent_volume_claim" "jenkins_pvc" {
   metadata {
-    name      = "jenkins-home"
+    name      = "jenkins-pvc"
     namespace = "jenkins"
 
     labels = {
@@ -46,19 +57,20 @@ resource "kubernetes_persistent_volume_claim" "jenkins_home" {
   }
 
   spec {
-    access_modes = ["ReadWriteMany"]
+    access_modes = ["ReadWriteOnce"]
+    storage_class_name = "local-path"
+    # volume_name = "jenkins-pv"
     
     resources {
       requests = {
-        storage = "2Gi"
+        storage = "1Gi"
       }
     }
-
-    storage_class_name = "standard"
   }
 
   wait_until_bound = false
-  depends_on = [kubernetes_persistent_volume.jenkins_pv]
+  # depends_on = [kubernetes_persistent_volume.jenkins_pv]
+  depends_on = [kubernetes_namespace.jenkins]
 }
 
 resource "kubernetes_deployment" "jenkins" {
@@ -85,10 +97,9 @@ resource "kubernetes_deployment" "jenkins" {
 
       spec {
         volume {
-          name = "jenkins-pv"
-
+          name = "jenkins-home"
           persistent_volume_claim {
-            claim_name = "jenkins-home"
+            claim_name = "jenkins-pvc"
           }
         }
 
@@ -142,7 +153,7 @@ resource "kubernetes_deployment" "jenkins" {
       }
     }
   }
-  depends_on = [kubernetes_persistent_volume_claim.jenkins_home]
+  depends_on = [kubernetes_persistent_volume_claim.jenkins_pvc]
 }
 
 resource "kubernetes_service" "jenkins" {

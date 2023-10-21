@@ -30,8 +30,8 @@ spec:
           ports:
             - containerPort: 8080  # Exposes container port
           volumeMounts:
-            - mountPath: var/jenkins_home
-              name: jenkins-home
+            - name: jenkins-home
+              mountPath: var/jenkins_home
           resources:
             requests:
               cpu: "1"
@@ -42,6 +42,6 @@ spec:
       volumes:
         - name: jenkins-home
           persistentVolumeClaim:
-            claimName: jenkins-home
+            claimName: jenkins-pvc
       nodeSelector:
         kubernetes.io/os: linux
