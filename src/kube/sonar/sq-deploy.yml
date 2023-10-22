@@ -49,10 +49,10 @@ spec:
         - configMapRef:
             name: sonar-config
         volumeMounts:
-        - name: app-pvc
+        - name: sonar-mnt
           mountPath: "/opt/sonarqube/data/"
           subPath: data
-        - name: app-pvc
+        - name: sonar-mnt
           mountPath: "/opt/sonarqube/extensions/"
           subPath: extensions
         resources:
@@ -62,7 +62,7 @@ spec:
             cpu: "1"
             memory: "2048Mi"
       volumes:
-      - name: app-pvc
+      - name: sonar-mnt
         persistentVolumeClaim:
           claimName: sonar-pvc
       nodeSelector:

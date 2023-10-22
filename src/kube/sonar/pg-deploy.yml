@@ -5,7 +5,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: postgres  # Sets Deployment name
+  name: postgres
   namespace: sonar
 spec:
   replicas: 1
@@ -38,7 +38,7 @@ spec:
                 name: postgres-config
           volumeMounts:
             - mountPath: /var/lib/postgresql/data
-              name: postgredb
+              name: postgres-mnt
           resources:
             requests:
               cpu: "1"
@@ -47,8 +47,8 @@ spec:
               cpu: "1"
               memory: "2048Mi"
       volumes:
-        - name: postgredb
+        - name: postgres-mnt
           persistentVolumeClaim:
-            claimName: postgres-pv-claim
+            claimName: postgres-pvc
       nodeSelector:
         kubernetes.io/os: linux

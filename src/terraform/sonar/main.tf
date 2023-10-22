@@ -34,30 +34,40 @@ resource "kubernetes_config_map" "postgres_config" {
   depends_on = [kubernetes_namespace.sonar]
 }
 
-resource "kubernetes_persistent_volume" "postgres_pv" {
-  metadata {
-    name = "postgres-pv"
+# pv is global...
+# resource "kubernetes_persistent_volume" "postgres_pv" {
+#   metadata {
+#     name = "postgres-pv"
 
-    labels = {
-      app = "postgres"
+#     labels = {
+#       type = "local"
+#     }
+#   }
 
-      type = "local"
-    }
-  }
-
-  spec {
-    capacity = {
-      storage = "2Gi"
-    }
-    access_modes = ["ReadWriteMany"]
-    persistent_volume_source {
-      host_path  {
-        path  = "/mnt/sonar/pg"
-      }
-    }
-  }
-  depends_on = [kubernetes_namespace.sonar]
-}
+#   spec {
+#     capacity = {
+#       storage = "2Gi"
+#     }
+#     access_modes = ["ReadWriteOnce"]
+#     storage_class_name = "local-path"
+#     persistent_volume_source {
+#       local  {
+#       }
+#     }
+#     node_affinity {
+#       required {
+#         node_selector_term {
+#           match_expressions {
+#             key      = "kubernetes.io/hostname"
+#             operator = "In"
+#             values   = ["tec-kube-n1", "tec-kube-n2", "tec-kube-n3"]
+#           }
+#         }
+#       }
+#     }
+#   }
+#   depends_on = [kubernetes_namespace.sonar]
+# }
 
 resource "kubernetes_persistent_volume_claim" "postgres_pvc" {
   metadata {
@@ -70,19 +80,20 @@ resource "kubernetes_persistent_volume_claim" "postgres_pvc" {
   }
 
   spec {
-    access_modes = ["ReadWriteMany"]
-
+    access_modes = ["ReadWriteOnce"]
+    storage_class_name = "local-path"
+    # volume_name = "postgres-pv"
+    
     resources {
       requests = {
-        storage = "2Gi"
+        storage = "1Gi"
       }
     }
-
-    storage_class_name = "standard"
   }
 
   wait_until_bound = false
-  depends_on = [kubernetes_persistent_volume.postgres_pv]
+  depends_on = [kubernetes_namespace.sonar]
+  # depends_on = [kubernetes_persistent_volume.postgres_pv]
 }
 
 resource "kubernetes_deployment" "postgres" {
@@ -112,7 +123,7 @@ resource "kubernetes_deployment" "postgres" {
           name = "postgredb"
 
           persistent_volume_claim {
-            claim_name = "postgres-pv-claim"
+            claim_name = "postgres-pvc"
           }
         }
 
@@ -204,29 +215,60 @@ resource "kubernetes_service" "postgres" {
 ##########################
 # SonarQube 
 ##########################
-resource "kubernetes_persistent_volume" "sonar_pv" {
+resource "kubernetes_config_map" "sonar_config" {
   metadata {
-    name = "sonar-pv"
+    name      = "sonar-config"
+    namespace = "sonar"
 
     labels = {
       app = "sonar"
-      type = "local"
     }
   }
 
-  spec {
-    capacity = {
-      storage = "2Gi"
-    }
-    access_modes = ["ReadWriteMany"]
-    persistent_volume_source {
-      host_path  {
-        path  = "/mnt/sonar/sq"
-      }
-    }
+  data = {
+    JAVA_OPTS = "-Duser.timezone=America/Chicago -Xmx2048m"
+    SONARQUBE_JDBC_PASSWORD = "S0N4RQUB3"
+    SONARQUBE_JDBC_URL = "jdbc:postgresql://postgres:5432/sonar_db"
+    SONARQUBE_JDBC_USERNAME = "sonar_user"
   }
   depends_on = [kubernetes_namespace.sonar]
 }
+
+# no namespace on pv?
+# resource "kubernetes_persistent_volume" "sonar_pv" {
+  
+#   metadata {
+#     name = "sonar-pv"
+
+#     labels = {
+#       type = "local"
+#     }
+#   }
+
+#   spec {
+#     capacity = {
+#       storage = "2Gi"
+#     }
+#     access_modes = ["ReadWriteOnce"]
+#     storage_class_name = "local-path"
+#     persistent_volume_source {
+#       local  {
+#       }
+#     }
+#     node_affinity {
+#       required {
+#         node_selector_term {
+#           match_expressions {
+#             key      = "kubernetes.io/hostname"
+#             operator = "In"
+#             values   = ["tec-kube-n1", "tec-kube-n2", "tec-kube-n3"]
+#           }
+#         }
+#       }
+#     }
+#   }
+#   depends_on = [kubernetes_config_map.sonar_config]
+# }
 
 resource "kubernetes_persistent_volume_claim" "sonar_pvc" {
   metadata {
@@ -235,17 +277,20 @@ resource "kubernetes_persistent_volume_claim" "sonar_pvc" {
   }
 
   spec {
-    access_modes = ["ReadWriteMany"]
-
+    access_modes = ["ReadWriteOnce"]
+    storage_class_name = "local-path"
+    # volume_name = "sonar-pv"
+    
     resources {
       requests = {
-        storage = "2Gi"
+        storage = "1Gi"
       }
     }
   }
 
   wait_until_bound = false
-  depends_on = [kubernetes_persistent_volume.sonar_pv]
+  # depends_on = [kubernetes_persistent_volume.sonar_pv]
+  depends_on = [kubernetes_config_map.sonar_config]
 }
 
 resource "kubernetes_deployment" "sonar" {

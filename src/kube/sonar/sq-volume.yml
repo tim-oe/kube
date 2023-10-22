@@ -1,19 +1,28 @@
-kind: PersistentVolume
-apiVersion: v1
-metadata:
-  name: sonar-pv  # Sets PV's name
-  namespace: sonar
-  labels:
-    type: local  # Sets PV's type to local
-    app: sonar
-spec:
-  storageClassName: standard
-  capacity:
-    storage: 2Gi # Sets PV Volume
-  accessModes:
-    - ReadWriteMany
-  hostPath:
-    path: "/mnt/data"
+# kind: PersistentVolume
+# apiVersion: v1
+# metadata:
+#   name: sonar-pv 
+#   namespace: sonar
+#   labels:
+#     app: sonar
+# spec:
+#   storageClassName: local-path
+#   capacity:
+#     storage: 2Gi
+#   accessModes:
+#     - ReadWriteOnce
+#   local:
+#     path: "/mnt/kube/sonar/sq"
+#   nodeAffinity:
+#     required:
+#       nodeSelectorTerms:
+#       - matchExpressions:
+#         - key: kubernetes.io/hostname
+#           operator: In
+#           values:
+#           - tec-kube-n1
+#           - tec-kube-n2
+#           - tec-kube-n3
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
@@ -21,8 +30,10 @@ metadata:
   name: sonar-pvc
   namespace: sonar
 spec:
+  # volumeName: sonar-pv
+  storageClassName: local-path
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce 
   resources:
     requests:
-      storage: 2Gi
+      storage: 2Gi 

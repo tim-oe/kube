@@ -18,11 +18,14 @@ resource "kubernetes_namespace" "kubernetes_dashboard" {
   }
 }
 
+# TODO no worky
 resource "helm_release" "kubernetes_dashboard" {
   name             = "kubernetes-dashboard"
   repository       = "https://kubernetes.github.io/dashboard/"
   chart            = "kubernetes-dashboard"
   namespace        = "kubernetes-dashboard"
+  # no back version other than 3.x
+  # version          = "2.7.0" 
 
   depends_on = [kubernetes_namespace.kubernetes_dashboard]
 }
