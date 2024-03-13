@@ -35,6 +35,7 @@
 - [K3S pi cluster](https://docs.k3s.io/)
   - [releases](https://github.com/k3s-io/k3s/releases)
   - [system upgrade controller](https://github.com/rancher/system-upgrade-controller)
+    - [more howto](https://www.cncf.io/blog/2020/11/25/upgrade-a-k3s-kubernetes-cluster-with-system-upgrade-controller/)
   - [local-path pv and pvc](https://github.com/rancher/local-path-provisioner)
 
 ### terraform
@@ -113,3 +114,7 @@
 
 - [unbounded volume](https://stackoverflow.com/questions/60774220/kubernetes-pod-has-unbound-immediate-persistentvolumeclaims)
 - [pvc creation excededs timeout](https://github.com/hashicorp/terraform-provider-kubernetes/issues/1349)
+- [node labeling](https://linuxhandbook.com/kubectl-label-node/)
+- [pod debugging](https://kubernetes.io/docs/tasks/debug/debug-application/debug-pods/)
+- [stalled k3s upgrade](https://github.com/k3s-io/k3s/issues/9350)
+  - [uncordon node](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_uncordon/)

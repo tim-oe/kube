@@ -293,23 +293,19 @@ tasks.register('loadUpgradeCtlr') {
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'label', 'node', 'tec-kube-n1', 'k3s-upgrade=true' 
+            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-n1', 'k3s-upgrade=true' 
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'label', 'node', 'tec-kube-n2', 'k3s-upgrade=true' 
+            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-n2', 'k3s-upgrade=true' 
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'label', 'node', 'tec-kube-n3', 'k3s-upgrade=true' 
+            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-n3', 'k3s-upgrade=true' 
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'label', 'node', 'tec-kube-ctlr', 'k3s-upgrade=true' 
-        }
-        exec {
-            workingDir '.'
-            commandLine 'kubectl', 'label', 'node', 'tec-kube-ctlr', 'node-role.kubernetes.io/master=true' 
+            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-ctlr', 'k3s-upgrade=true' 
         }
      }
 }
@@ -319,6 +315,32 @@ tasks.register('deleteUpgradeCtlr', GradleBuild) {
     group = "container"
     startParameter.projectProperties = ['namespace':'system-upgrade']
     tasks = ['deleteAll']
+    doLast {
+        copy {
+            from layout.projectDirectory.dir('src/kube/upgradeController/upgrade-plan.yml')
+            into layout.buildDirectory
+            include 'upgrade-plan.yml'
+            expand(
+                    k3s_version: "${K3S_VERSION}"            
+            )
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-n1', 'k3s-upgrade-' 
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-n2', 'k3s-upgrade-' 
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-n3', 'k3s-upgrade-' 
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-ctlr', 'k3s-upgrade-' 
+        }
+     }
 }
 
 // https://blog.devgenius.io/kubernetes-resource-discovery-how-to-list-all-resources-in-a-namespace-555d4e662cfd
@@ -334,7 +356,7 @@ tasks.register('deleteAll') {
                 workingDir '.'
                 commandLine 'bash', '-c',
                     'kubectl api-resources --verbs=list --namespaced -o name ' +
-                    '| xargs -i kubectl ' + "-n=${namespace}" + ' delete {} --all'        
+                    '| xargs -t -i kubectl ' + "-n=${namespace}" + ' delete {} --all'        
             }
             exec {
                 workingDir '.'
