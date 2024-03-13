@@ -1,11 +1,32 @@
-tasks.register('anskubemnt') {
-    description = 'run ansible kube mount scripts'
+tasks.register('aptupdate') {
+    description = 'run ansible apt update script'
     group = "ansible"
     doLast {
         exec {
             workingDir '.'
-            commandLine 'ansible-playbook', '-i', 
-                'tec-kube-n1,tec-kube-n2,tec-kube-n3,', 'src/ansible/pi/kube-mnt.yml'
+            commandLine 'ansible-playbook',  'src/ansible/pi/update-apt.yml'
+        }
+    }
+}
+
+tasks.register('k3sCtlrUpdate') {
+    description = 'run ansible k3s update script'
+    group = "ansible"
+    doLast {
+        exec {
+            workingDir '.'
+            commandLine 'ansible-playbook',  'src/ansible/pi/kube-ctlr-upgrade.yml'
+        }
+    }
+}
+
+tasks.register('k3sNodeUpdate') {
+    description = 'run ansible k3s update script'
+    group = "ansible"
+    doLast {
+        exec {
+            workingDir '.'
+            commandLine 'ansible-playbook',  'src/ansible/pi/kube-node-upgrade.yml'
         }
     }
 }

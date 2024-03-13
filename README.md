@@ -1,8 +1,8 @@
 # kubernetes workbench
 
-![lpi cluster](docs/img/pi-kube.jpg?raw=true)
+![pi 3 noder cluster](docs/img/pi-kube.jpg?raw=true)
 
-- [setup guide](https://anthonynsimon.com/blog/kubernetes-cluster-raspberry-pi/)
+- [setup guide (used to install)](https://anthonynsimon.com/blog/kubernetes-cluster-raspberry-pi/)
 - [another seup guide](https://blog.alexellis.io/self-hosting-kubernetes-on-your-raspberry-pi/)
 
 ## goals
@@ -10,26 +10,32 @@
 - Create a home managable kubernetes cluster beyond mimkube.
 - automate system configuration
 - become familiur with different deployment mechanisms
-  - kubectl
-  - terraform
-  - helm
-  - ARGOCD
+  - [kubectl](https://kubernetes.io/docs/reference/kubectl/)
+  - [terraform](https://developer.hashicorp.com/terraform/docs)
+  - [helm](https://helm.sh/docs/)
+  - [argocd](https://argo-cd.readthedocs.io/en/stable/)
 - migrate docker home services
   - to kube manifest
   - to terraform resources
+  - to helm charts
 
 ## cluster and kube stuff
+
+- [remove traefik](https://qdnqn.com/k3s-remove-traefik/)
+- [install nginx](https://kubernetes.github.io/ingress-nginx/deploy/#bare-metal-clusters)
 
 ### kubernetes
 
 - [kube docs](https://kubernetes.io/docs/home/)
 - [minikube](https://minikube.sigs.k8s.io/docs/)
   - used for local testing/dev
-- [kompose](https://kubernetes.io/docs/tasks/configure-pod-container/translate-compose-kubernetes/) 
+- [kompose](https://kubernetes.io/docs/tasks/configure-pod-container/translate-compose-kubernetes/)
   - translate docker -> kube not always helpfull
-- see gradle scripts for some useful commands
-- [K3S](https://docs.k3s.io/)
-- [local-path pv and pvc](https://github.com/rancher/local-path-provisioner)
+  - see gradle scripts for some useful commands
+- [K3S pi cluster](https://docs.k3s.io/)
+  - [releases](https://github.com/k3s-io/k3s/releases)
+  - [system upgrade controller](https://github.com/rancher/system-upgrade-controller)
+  - [local-path pv and pvc](https://github.com/rancher/local-path-provisioner)
 
 ### terraform
 
@@ -44,7 +50,7 @@
 
 ### ansible
 
-- used to prevision PIs
+- used to provision PIs
 - [docs](https://access.redhat.com/documentation/en-us/red_hat_ansible_automation_platform/2.4)
 
 ## services
@@ -82,11 +88,17 @@
 
 - [on minkube](https://kubernetes.io/docs/tasks/access-application-cluster/ingress-minikube/)
 - got a working version for minikube [here](https://stackoverflow.com/questions/51751462/nginx-ingress-jenkins-path-rewrite-configuration-not-working)
-- still days to go with cluster
+- [nginx ingres controller](https://kubernetes.github.io/ingress-nginx/)
+- still wip
+
+### aws
+
+- [ebs volume](https://angelmarybabu.github.io/posts/How-to-create-Persistent-Volume-in-EKS/)
+- [eks storage](https://repost.aws/knowledge-center/eks-persistent-storage)
 
 ## TODOs
 
-- cloud-init to bridge imaging and ansible
+- [cloud-init](https://help.ubuntu.com/community/CloudInit) to bridge imaging and ansible
 - service running with both kube manifest and terraform
 - proper host ingress on cluster
 - https via [opnsense CA](https://www.ssltrust.com/help/setup-guides/use-opnsense-ca-certificate-authority)
@@ -94,6 +106,8 @@
 - deploy to [GKE](https://cloud.google.com/kubernetes-engine/)
 - deploy to [EKS](https://aws.amazon.com/eks/)
   - [aws provitioning](https://stackoverflow.com/questions/75758115/persistentvolumeclaim-is-stuck-waiting-for-a-volume-to-be-created-either-by-ex)
+- [pi monitoring](https://dirtyoptics.com/how-to-monitor-a-raspberry-pi-remotely/)
+- [kube jenkins agents](https://plugins.jenkins.io/kubernetes/)
 
 ## FAQ
 

@@ -1,6 +1,7 @@
 # https://anthonynsimon.com/blog/kubernetes-cluster-raspberry-pi/#what-is-k3s-and-how-is-it-different-than-kubernetes
 # http://armand.nz/notes/k3s/Kubernetes%20Cluster%20on%20Raspberry%20Pi%20using%20Ubuntu%2022.04%20LTS%20and%20K3s
 # https://docs.k3s.io/installation/uninstall
+# TODO remove traefik https://qdnqn.com/k3s-remove-traefik/
 ---
 - name: setup kube controller node
   hosts: kube_controller

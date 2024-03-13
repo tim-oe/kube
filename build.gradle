@@ -1,32 +1,3 @@
 apply from: 'src/gradle/ansible.gradle'
+apply from: 'src/gradle/aws.gradle'
 apply from: 'src/gradle/kube.gradle'
-
-// https://docs.aws.amazon.com/cli/latest/reference/eks/update-kubeconfig.html
-tasks.register('awsConfig') {
-    description = 'create kube config file for aws cluster'
-    group = "container"
-    doLast {
-        exec {
-            workingDir '.'
-            commandLine 'bash', '-c',
-            'aws eks update-kubeconfig --name cicd'
-        }
-    }
-}
-
-// https://docs.aws.amazon.com/eks/latest/userguide/create-cluster.html
-tasks.register('awsCluster') {
-    description = 'create aws cluster'
-    group = "container"
-    doLast {
-        exec {
-            workingDir '.'
-            commandLine 'bash', '-c',
-            'aws eks create-cluster ' + 
-            '--name cicd ' + 
-            '--kubernetes-version 1.27 ' +
-            '--role-arn arn:aws:iam::744686699669:role/EKSClusterRole ' +
-            '--resources-vpc-config subnetIds=subnet-57a4b40e,subnet-756ec211,securityGroupIds=sg-9e97a0f9'
-        }
-    }
-}
