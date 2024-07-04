@@ -1,44 +1,41 @@
-# https://hub.docker.com/_/postgres/
-# https://www.airplane.dev/blog/deploy-postgres-on-kubernetes
-# https://severalnines.com/blog/using-kubernetes-deploy-postgresql
-# https://docs.vmware.com/en/VMware-SQL-with-Postgres-for-Kubernetes/1.9/tanzu-postgres-k8s/GUID-accessing.html
-apiVersion: apps/v1
-kind: Deployment
+---
+apiVersion: "apps/v1"
+kind: "Deployment"
 metadata:
-  name: postgres
-  namespace: sonar
+  name: "postgres"
+  namespace: "sonar"
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: postgres
+      app: "postgres"
   template:
     metadata:
       labels:
-        app: postgres
+        app: "postgres"
     spec:
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
-            - matchExpressions:
-              - key: kubernetes.io/arch
-                operator: In
-                values:
-                - amd64
-                - arm64
+              - matchExpressions:
+                  - key: "kubernetes.io/arch"
+                    operator: "In"
+                    values:
+                      - "amd64"
+                      - "arm64"
       containers:
-        - name: postgres
-          image: postgres:15.4 # Sets Image
+        - name: "postgres"
+          image: "postgres:15.4"
           imagePullPolicy: "IfNotPresent"
           ports:
-            - containerPort: 5432  # Exposes container port
+            - containerPort: 5432
           envFrom:
             - configMapRef:
-                name: postgres-config
+                name: "postgres-config"
           volumeMounts:
-            - mountPath: /var/lib/postgresql/data
-              name: postgres-mnt
+            - mountPath: "/var/lib/postgresql/data"
+              name: "postgres-mnt"
           resources:
             requests:
               cpu: "1"
@@ -47,8 +44,8 @@ spec:
               cpu: "1"
               memory: "2048Mi"
       volumes:
-        - name: postgres-mnt
+        - name: "postgres-mnt"
           persistentVolumeClaim:
-            claimName: postgres-pvc
+            claimName: "postgres-pvc"
       nodeSelector:
-        kubernetes.io/os: linux
+        kubernetes.io/os: "linux"

@@ -1,23 +1,22 @@
-# dns utilities to see host information
-# https://dev.to/vepo/finding-dns-for-kubernetes-service-3p0e
-apiVersion: v1
-kind: Pod
+---
+apiVersion: "v1"
+kind: "Pod"
 metadata:
-  name: dnsutils
-  namespace: default
+  name: "dnsutils"
+  namespace: "default"
 spec:
   containers:
-  - name: dnsutils
-    image: gcr.io/kubernetes-e2e-test-images/dnsutils:1.3
-    command:
-      - sleep
-      - "3600"
-    imagePullPolicy: IfNotPresent
-    resources:
-      requests:
-        cpu: "1"
-        memory: "128Mi"
-      limits:
-        cpu: "1"
-        memory: "256Mi"
-  restartPolicy: Always
+    - name: "dnsutils"
+      image: "gcr.io/kubernetes-e2e-test-images/dnsutils:1.3"
+      command:
+        - "sleep"
+        - "3600"
+      imagePullPolicy: "IfNotPresent"
+      resources:
+        requests:
+          cpu: "1"
+          memory: "128Mi"
+        limits:
+          cpu: "1"
+          memory: "256Mi"
+  restartPolicy: "Always"

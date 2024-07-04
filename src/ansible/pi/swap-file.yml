@@ -1,18 +1,25 @@
 ---
-- name: Setup swapfile
-  hosts: all
+- name: "increase swap space"
+  hosts: "all"
   become: true
-  become_user: root
+  become_user: "root"
   vars:
-    sf: /swapfile
+    config_file: "/etc/dphys-swapfile"
+    swap_space: 4096
   tasks:
-    - name: Create the file to be used for swap
-      command: "fallocate -l 8G {{ sf }}"
-    - name: Format the file for swap
-      command: "mkswap {{ sf }}"
-    - name: change swap file permissions
-      file: "path={{ sf }} owner=root group=root mode=0600"
-    - name: add the file to the system as a swap file
-      command: "swapon {{ sf }}"
-    - name: write swap entry in fstab
-      mount: "name=none src={{ sf }} fstype=swap opts=sw passno=0 dump=0 state=present"
+    - name: "swap off"
+      command: "dphys-swapfile swapoff"
+    - name: "set swap space"
+      ansible.builtin.replace:
+        path: "{{ config_file }}"
+        regexp: "^CONF_SWAPSIZE=.*$"
+        replace: "CONF_SWAPSIZE=512"
+    - name: "set max swap space"
+      ansible.builtin.replace:
+        path: "{{ config_file }}"
+        regexp: "^#?CONF_MAXSWAP=.*$"
+        replace: "CONF_MAXSWAP={{ swap_space }}"
+    - name: "swap init"
+      command: "dphys-swapfile setup"
+    - name: "swap on"
+      command: "dphys-swapfile swapon"

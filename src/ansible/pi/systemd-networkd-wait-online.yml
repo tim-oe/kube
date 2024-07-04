@@ -1,45 +1,43 @@
-# hack for issue with service not finding the network interfacr
-# this forces service on eth0
-# it also makes sure SSH is running
-# https://askubuntu.com/questions/1217252/boot-process-hangs-at-systemd-networkd-wait-online
 ---
-- name: Hack systemd-networkd-wait-online to use eth0.
-  hosts: all
+- name: "Hack systemd-networkd-wait-online to use eth0."
+  hosts: "all"
   become: true
-  become_user: root
+  become_user: "root"
   vars:
-    svc: systemd-networkd-wait-online
+    svc: "systemd-networkd-wait-online"
   tasks:
-    - name: Create override directory.
+    - name: "Create override directory."
       file:
-        owner: root
-        group: root
+        owner: "root"
+        group: "root"
         mode: "0755"
         path: "/etc/systemd/system/{{ svc }}.service.d"
-        state: directory
-    - name: Create override file.
+        state: "directory"
+    - name: "Create override file."
       community.general.ini_file:
         dest: "/etc/systemd/system/{{ svc }}.service.d/override.conf"
-        owner: root
-        group: root
+        owner: "root"
+        group: "root"
         mode: 644
-        section: Service
-        option: ExecStart
+        section: "Service"
+        option: "ExecStart"
         value: ""
-        exclusive: false # this is needed to allow 2 execStart
-    - name: Set exec start full command.
+        exclusive: false
+    - name: "Set exec start full command."
       community.general.ini_file:
         dest: "/etc/systemd/system/{{ svc }}.service.d/override.conf"
         mode: 644
-        section: Service
-        option: ExecStart
+        section: "Service"
+        option: "ExecStart"
         value: "/usr/lib/systemd/{{ svc }} --interface=eth0"
         exclusive: false
-    - name: Gather service facts.
-      ansible.builtin.service_facts:
-    - name: Start and enable ssh.
+    - name: "Gather service facts."
+      ansible.builtin.service_facts: null
+    - name: "Start and enable ssh."
       systemd:
-        name: ssh
-        state: started
+        name: "ssh"
+        state: "started"
         enabled: true
-      when: ansible_facts.services['ssh.service'] is defined and ansible_facts.services['ssh.service'].state != 'running'
+      when:
+        "ansible_facts.services['ssh.service'] is defined and ansible_facts.services['ssh.service'].state\
+        \ != 'running'"

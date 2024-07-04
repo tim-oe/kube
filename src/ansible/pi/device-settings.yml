@@ -1,150 +1,140 @@
-# https://forums.raspberrypi.com/viewtopic.php?t=291640
-# https://raspberrytips.com/disable-leds-on-raspberry-pi/
-# https://lindevs.com/turn-off-built-in-leds-on-raspberry-pi/
-# poe led no control
-# TODO backup file creation causing errors
 ---
-- name: change pi device settings
-  hosts: all
+- name: "change pi device settings"
+  hosts: "all"
   become: true
-  become_user: root
+  become_user: "root"
   vars:
-    config_file: /boot/firmware/config.txt
-    disable_wifi: dtoverlay=disable-wifi
-    disable_bt: dtoverlay=disable-bluetooth
-    disable_pwr_tgr: dtparam=pwr_led_trigger=default-on
-    disable_pwr_led: dtparam=pwr_led_activelow=off
-    disable_act_tgr: dtparam=act_led_trigger=none
-    disable_act_low: dtparam=act_led_activelow=off
-    disable_eth_led0: dtparam=eth_led0=14
-    disable_eth_led1: dtparam=eth_led1=14
+    config_file: "/boot/firmware/config.txt"
+    disable_wifi: "dtoverlay=disable-wifi"
+    disable_bt: "dtoverlay=disable-bluetooth"
+    disable_pwr_tgr: "dtparam=pwr_led_trigger=default-on"
+    disable_pwr_led: "dtparam=pwr_led_activelow=off"
+    disable_act_tgr: "dtparam=act_led_trigger=none"
+    disable_act_low: "dtparam=act_led_activelow=off"
+    disable_eth_led0: "dtparam=eth_led0=14"
+    disable_eth_led1: "dtparam=eth_led1=14"
   tasks:
-    - name: Check if wifi already disabled.
+    - name: "Check if wifi already disabled."
       lineinfile:
-        state: absent
+        state: "absent"
         path: "{{ config_file }}"
         regexp: "^{{ disable_wifi }}"
       check_mode: true
-      changed_when: false # This just makes things look prettier in the logs
-      register: wifi
-    - name: Disble wifi.
+      changed_when: false
+      register: "wifi"
+    - name: "Disble wifi."
       lineinfile:
-        state: present
+        state: "present"
         path: "{{ config_file }}"
         line: "{{ disable_wifi }}"
-      when: wifi.found == 0
-    - name: Check if bluetooth already disabled.
+      when: "wifi.found == 0"
+    - name: "Check if bluetooth already disabled."
       lineinfile:
-        state: absent
+        state: "absent"
         path: "{{ config_file }}"
         regexp: "^{{ disable_bt }}"
       check_mode: true
-      changed_when: false 
-      register: bt
-    - name: Disble bluetooth.
+      changed_when: false
+      register: "bt"
+    - name: "Disble bluetooth."
       lineinfile:
-        state: present
+        state: "present"
         path: "{{ config_file }}"
         line: "{{ disable_bt }}"
-      when: bt.found == 0
-    - name: Check if power led disabled.
+      when: "bt.found == 0"
+    - name: "Check if power led disabled."
       lineinfile:
-        state: absent
+        state: "absent"
         path: "{{ config_file }}"
         regexp: "^{{ disable_pwr_led }}"
       check_mode: true
       changed_when: false
-      register: pwr_led
-    - name: Disble power led.
+      register: "pwr_led"
+    - name: "Disble power led."
       lineinfile:
-        state: present
+        state: "present"
         path: "{{ config_file }}"
         line: "{{ disable_pwr_led }}"
-      when: pwr_led.found == 0
-    - name: Check if power trigger disabled.
+      when: "pwr_led.found == 0"
+    - name: "Check if power trigger disabled."
       lineinfile:
-        state: absent
+        state: "absent"
         path: "{{ config_file }}"
         regexp: "^{{ disable_pwr_tgr }}"
       check_mode: true
       changed_when: false
-      register: pwr_tgr
-    - name: Disble power trigger.
+      register: "pwr_tgr"
+    - name: "Disble power trigger."
       lineinfile:
-        state: present
+        state: "present"
         path: "{{ config_file }}"
         line: "{{ disable_pwr_tgr }}"
-      when: pwr_tgr.found == 0
-    - name: Check if activity trigger disabled.
+      when: "pwr_tgr.found == 0"
+    - name: "Check if activity trigger disabled."
       lineinfile:
-        state: absent
+        state: "absent"
         path: "{{ config_file }}"
         regexp: "^{{ disable_act_tgr }}"
       check_mode: true
       changed_when: false
-      register: act_tgr
-    - name: Disble activity trigger.
+      register: "act_tgr"
+    - name: "Disble activity trigger."
       lineinfile:
-        state: present
+        state: "present"
         path: "{{ config_file }}"
         line: "{{ disable_act_tgr }}"
-      when: act_tgr.found == 0
-    - name: Check if activity low disabled.
+      when: "act_tgr.found == 0"
+    - name: "Check if activity low disabled."
       lineinfile:
-        state: absent
+        state: "absent"
         path: "{{ config_file }}"
         regexp: "^{{ disable_act_low }}"
       check_mode: true
       changed_when: false
-      register: act_low
-    - name: Disble activity low.
+      register: "act_low"
+    - name: "Disble activity low."
       lineinfile:
-        state: present
+        state: "present"
         path: "{{ config_file }}"
         line: "{{ disable_act_low }}"
-      when: act_low.found == 0
-    - name: Check if eth 0 led disabled.
+      when: "act_low.found == 0"
+    - name: "Check if eth 0 led disabled."
       lineinfile:
-        state: absent
+        state: "absent"
         path: "{{ config_file }}"
         regexp: "^{{ disable_eth_led0 }}"
       check_mode: true
       changed_when: false
-      register: eth0_led
-    - name: Disble eth 0 led.
+      register: "eth0_led"
+    - name: "Disble eth 0 led."
       lineinfile:
-        state: present
+        state: "present"
         path: "{{ config_file }}"
         line: "{{ disable_eth_led0 }}"
-      when: eth0_led.found == 0
-    - name: Check if eth 1 led disabled.
+      when: "eth0_led.found == 0"
+    - name: "Check if eth 1 led disabled."
       lineinfile:
-        state: absent
+        state: "absent"
         path: "{{ config_file }}"
         regexp: "^{{ disable_eth_led1 }}"
       check_mode: true
       changed_when: false
-      register: eth1_led
-    - name: Disble eth 1 led.
+      register: "eth1_led"
+    - name: "Disble eth 1 led."
       lineinfile:
-        state: present
+        state: "present"
         path: "{{ config_file }}"
         line: "{{ disable_eth_led1 }}"
-      when: eth1_led.found == 0
-    - name: Reboot the box if changes applied.
+      when: "eth1_led.found == 0"
+    - name: "Reboot the box if changes applied."
       reboot:
         msg: "Reboot initiated by Ansible for firmware changes"
         connect_timeout: 5
         reboot_timeout: 300
         pre_reboot_delay: 0
         post_reboot_delay: 10
-        test_command: uptime
-      when: >
-        wifi.found == 0 or
-        bt.found == 0 or
-        pwr_led.found == 0 or
-        pwr_tgr.found == 0 or
-        act_tgr.found == 0 or
-        act_low.found == 0 or
-        eth0_led.found == 0 or
-        eth1_led.found == 0
+        test_command: "uptime"
+      when:
+        "wifi.found == 0 or bt.found == 0 or pwr_led.found == 0 or pwr_tgr.found\
+        \ == 0 or act_tgr.found == 0 or act_low.found == 0 or eth0_led.found == 0 or\
+        \ eth1_led.found == 0\n"

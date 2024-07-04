@@ -1,6 +1,7 @@
-kind: Namespace
-apiVersion: v1
+---
+kind: "Namespace"
+apiVersion: "v1"
 metadata:
-  name: sonar
+  name: "sonar"
   labels:
-    name: sonar
+    name: "sonar"

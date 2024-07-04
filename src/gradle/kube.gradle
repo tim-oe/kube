@@ -1,4 +1,35 @@
-tasks.register('loadsonar') {
+// https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/
+tasks.register('updateKubectl') {
+    description = 'update kubectl'
+    group = "utils"
+    doLast {
+        exec {
+            workingDir '.'
+            commandLine 'bash', '-c',
+                    'curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'chmod', '777', 'kubectl'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'sudo', 'mv', 'kubectl', '/usr/local/bin/'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'rm', '-f', 'kubectl'
+        }
+    }
+}
+
+// https://hub.docker.com/_/sonarqube/
+// https://serverfault.com/questions/956361/kubernetes-docker-and-vm-max-map-count
+// https://hub.docker.com/_/postgres/
+// https://www.airplane.dev/blog/deploy-postgres-on-kubernetes
+// https://severalnines.com/blog/using-kubernetes-deploy-postgresql
+// https://docs.vmware.com/en/VMware-SQL-with-Postgres-for-Kubernetes/1.9/tanzu-postgres-k8s/GUID-accessing.html
+tasks.register('loadSonar') {
     description = 'load postgres container to kube'
     group = "container"
     doLast {
@@ -45,7 +76,7 @@ tasks.register('loadsonar') {
     }
 }
 
-tasks.register('deletesonar', GradleBuild) {
+tasks.register('delSonar', GradleBuild) {
     description = 'delete postgres kube resources'
     group = "container"
     startParameter.projectProperties = ['namespace':'sonar']
@@ -91,7 +122,7 @@ tasks.register('loadjenkins') {
     }
 }
 
-tasks.register('deletejenkins', GradleBuild) {
+tasks.register('deljenkins', GradleBuild) {
     description = 'delete jenkins kube resources'
     group = "container"
     startParameter.projectProperties = ['namespace':'jenkins']
@@ -113,7 +144,7 @@ tasks.register('jenkinssecret') {
             exec {
                 workingDir '.'
                 commandLine 'bash', '-c',
-                'kubectl -n=jenkins exec -it ' + "${jenkins_pod}" + ' -- cat /var/jenkins_home/secrets/initialAdminPassword'
+                        'kubectl -n=jenkins exec -it ' + "${jenkins_pod}" + ' -- cat /var/jenkins_home/secrets/initialAdminPassword'
             }
         } else {
             println "need to set -Pjenkins_pod=[pod name]"
@@ -121,6 +152,8 @@ tasks.register('jenkinssecret') {
     }
 }
 
+// dns utilities to see host information
+// https://dev.to/vepo/finding-dns-for-kubernetes-service-3p0e
 tasks.register('loaddnsutils') {
     description = 'load dnsutils container to kube'
     group = "container"
@@ -132,7 +165,7 @@ tasks.register('loaddnsutils') {
     }
 }
 
-tasks.register('deletednsutils') {
+tasks.register('delDnsutils') {
     description = 'delete dnsutils container to kube'
     group = "container"
     doLast {
@@ -155,20 +188,19 @@ tasks.register('loaddashboard') {
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 
-                'https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml',
-                '-n', 'kubernetes-dashboard'
-
+            commandLine 'kubectl', 'apply', '-f',
+                    'https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml',
+                    '-n', 'kubernetes-dashboard'
         }
         exec {
             workingDir '.'
             commandLine 'kubectl', 'apply', '-f', 'src/kube/dashboard/admin-user.yml'
         }
-        // dump token       
+        // dump token
         exec {
             workingDir '.'
             commandLine 'bash', '-c',
-                'kubectl get secret admin-user -n kubernetes-dashboard -o jsonpath={".data.token"} | base64 -d'
+                    'kubectl get secret admin-user -n kubernetes-dashboard -o jsonpath={".data.token"} | base64 -d'
         }
     }
 }
@@ -180,12 +212,12 @@ tasks.register('dashboadtoken') {
         exec {
             workingDir '.'
             commandLine 'bash', '-c',
-                'kubectl get secret admin-user -n kubernetes-dashboard -o jsonpath={".data.token"} | base64 -d'
+                    'kubectl get secret admin-user -n kubernetes-dashboard -o jsonpath={".data.token"} | base64 -d'
         }
     }
 }
 
-tasks.register('deletedashboard', GradleBuild) {
+tasks.register('deldashboard', GradleBuild) {
     description = 'delete jenkins kube resources'
     group = "container"
     startParameter.projectProperties = ['namespace':'kubernetes-dashboard']
@@ -194,14 +226,14 @@ tasks.register('deletedashboard', GradleBuild) {
         exec {
             workingDir '.'
             ignoreExitValue true
-            commandLine 'kubectl', 'delete', 'serviceAccounts', 
-            '-n', 'kubernetes-dashboard', 'admin-user'
+            commandLine 'kubectl', 'delete', 'serviceAccounts',
+                    '-n', 'kubernetes-dashboard', 'admin-user'
         }
         exec {
             workingDir '.'
             ignoreExitValue true
-            commandLine 'kubectl', 'delete', 'ClusterRoleBinding', 
-            '-n', 'kubernetes-dashboard', 'admin-user'
+            commandLine 'kubectl', 'delete', 'ClusterRoleBinding',
+                    '-n', 'kubernetes-dashboard', 'admin-user'
         }
     }
 }
@@ -217,13 +249,13 @@ tasks.register('loaddargo') {
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-n', 'argocd', '-f', 
-            'https://raw.githubusercontent.com/argoproj/argo-cd/master/manifests/install.yaml'
+            commandLine 'kubectl', 'apply', '-n', 'argocd', '-f',
+                    'https://raw.githubusercontent.com/argoproj/argo-cd/master/manifests/install.yaml'
         }
     }
 }
 
-tasks.register('deleteargo', GradleBuild) {
+tasks.register('delargo', GradleBuild) {
     description = 'delete argocd container to kube'
     group = "container"
     startParameter.projectProperties = ['namespace':'argocd']
@@ -237,19 +269,19 @@ tasks.register('deleteargo', GradleBuild) {
 }
 
 // https://kubernetes.github.io/ingress-nginx/deploy/#bare-metal-clusters
-tasks.register('loaddnginx') {
+tasks.register('loadEnginx') {
     description = 'load nginx container to kube'
     group = "container"
     doLast {
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 
-            'https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.10.0/deploy/static/provider/baremetal/deploy.yaml'
+            commandLine 'kubectl', 'apply', '-f',
+                    'https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.10.0/deploy/static/provider/baremetal/deploy.yaml'
         }
     }
 }
 
-tasks.register('deleteninx', GradleBuild) {
+tasks.register('deEnginx', GradleBuild) {
     description = 'delete nginx container to kube'
     group = "container"
     startParameter.projectProperties = ['namespace':'ingress-nginx']
@@ -259,6 +291,9 @@ tasks.register('deleteninx', GradleBuild) {
 // https://docs.k3s.io/upgrades/automated
 // https://github.com/rancher/system-upgrade-controller?tab=readme-ov-file
 // https://www.cncf.io/blog/2020/11/25/upgrade-a-k3s-kubernetes-cluster-with-system-upgrade-controller/
+// These plans are adapted from work by Dax McDonald (https://github.com/daxmc99) and Hussein Galal (https://github.com/galal-hussein)
+// in support of Rancher v2 managed k3s upgrades. See Also: https://rancher.com/docs/k3s/latest/en/upgrades/automated/
+// gleened from https://github.com/rancher/system-upgrade-controller/blob/master/examples/k3s-upgrade.yaml
 tasks.register('loadUpgradeCtlr') {
     description = 'load upgrade controller to kube'
     group = "container"
@@ -268,8 +303,8 @@ tasks.register('loadUpgradeCtlr') {
             into layout.buildDirectory
             include 'upgrade-plan.yml'
             expand(
-                    k3s_version: "${K3S_VERSION}"            
-            )
+                    k3s_version: "${K3S_VERSION}"
+                    )
         }
         exec {
             workingDir '.'
@@ -278,39 +313,39 @@ tasks.register('loadUpgradeCtlr') {
         // https://github.com/rancher/system-upgrade-controller/issues/298
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 
-            "https://github.com/rancher/system-upgrade-controller/releases/download/${SYSTEM_UPGRADE_CONTROLLER_VERSION}/crd.yaml"
+            commandLine 'kubectl', 'apply', '-f',
+                    "https://github.com/rancher/system-upgrade-controller/releases/download/${SYSTEM_UPGRADE_CONTROLLER_VERSION}/crd.yaml"
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 
-            "https://github.com/rancher/system-upgrade-controller/releases/download/${SYSTEM_UPGRADE_CONTROLLER_VERSION}/system-upgrade-controller.yaml"
+            commandLine 'kubectl', 'apply', '-f',
+                    "https://github.com/rancher/system-upgrade-controller/releases/download/${SYSTEM_UPGRADE_CONTROLLER_VERSION}/system-upgrade-controller.yaml"
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 
-            "build/upgrade-plan.yml"
+            commandLine 'kubectl', 'apply', '-f',
+                    "build/upgrade-plan.yml"
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-n1', 'k3s-upgrade=true' 
+            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-n1', 'k3s-upgrade=true'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-n2', 'k3s-upgrade=true' 
+            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-n2', 'k3s-upgrade=true'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-n3', 'k3s-upgrade=true' 
+            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-n3', 'k3s-upgrade=true'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-ctlr', 'k3s-upgrade=true' 
+            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-ctlr', 'k3s-upgrade=true'
         }
-     }
+    }
 }
 
-tasks.register('deleteUpgradeCtlr', GradleBuild) {
+tasks.register('delUpgradeCtlr', GradleBuild) {
     description = 'delete nginx container to kube'
     group = "container"
     startParameter.projectProperties = ['namespace':'system-upgrade']
@@ -321,26 +356,26 @@ tasks.register('deleteUpgradeCtlr', GradleBuild) {
             into layout.buildDirectory
             include 'upgrade-plan.yml'
             expand(
-                    k3s_version: "${K3S_VERSION}"            
-            )
+                    k3s_version: "${K3S_VERSION}"
+                    )
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-n1', 'k3s-upgrade-' 
+            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-n1', 'k3s-upgrade-'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-n2', 'k3s-upgrade-' 
+            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-n2', 'k3s-upgrade-'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-n3', 'k3s-upgrade-' 
+            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-n3', 'k3s-upgrade-'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-ctlr', 'k3s-upgrade-' 
+            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-ctlr', 'k3s-upgrade-'
         }
-     }
+    }
 }
 
 // https://blog.devgenius.io/kubernetes-resource-discovery-how-to-list-all-resources-in-a-namespace-555d4e662cfd
@@ -350,25 +385,25 @@ tasks.register('deleteAll') {
             exec {
                 workingDir '.'
                 commandLine 'bash', '-c',
-                    'kubectl ' + "-n=${namespace}" + ' delete all --all' 
+                        'kubectl ' + "-n=${namespace}" + ' delete all --all'
             }
             exec {
                 workingDir '.'
                 commandLine 'bash', '-c',
-                    'kubectl api-resources --verbs=list --namespaced -o name ' +
-                    '| xargs -t -i kubectl ' + "-n=${namespace}" + ' delete {} --all'        
-            }
-            exec {
-                workingDir '.'
-                ignoreExitValue true
-                commandLine 'bash', '-c',
-                    'kubectl delete events -n kube-system' 
+                        'kubectl api-resources --verbs=list --namespaced -o name ' +
+                        '| xargs -t -i kubectl ' + "-n=${namespace}" + ' delete {} --all'
             }
             exec {
                 workingDir '.'
                 ignoreExitValue true
                 commandLine 'bash', '-c',
-                    'kubectl delete namespace ' + "${namespace}" 
+                        'kubectl delete events -n kube-system'
+            }
+            exec {
+                workingDir '.'
+                ignoreExitValue true
+                commandLine 'bash', '-c',
+                        'kubectl delete namespace ' + "${namespace}"
             }
         } else {
             println "need to set -Pnamespace=[resource namespace]"

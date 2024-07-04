@@ -1,6 +1,7 @@
-kind: Namespace
-apiVersion: v1
+---
+kind: "Namespace"
+apiVersion: "v1"
 metadata:
-  name: jenkins
+  name: "jenkins"
   labels:
-    name: jenkins
+    name: "jenkins"

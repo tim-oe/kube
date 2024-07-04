@@ -1,0 +1,31 @@
+---
+- name: "install nfs client and create shared directory"
+  hosts: "kube_nodes"
+  become: true
+  become_user: "root"
+  tasks:
+    - name: "Update apt repo and cache."
+      apt:
+        update_cache: true
+        cache_valid_time: 3600
+    - name: "apt install nfs clent package"
+      apt:
+        name: "nfs-common"
+        state: "present"
+    - name: "Create a directory if it does not exist"
+      ansible.builtin.file:
+        path: "/mnt/kube"
+        state: "directory"
+        mode: "0777"
+    - name: "add mount"
+      ansible.posix.mount:
+        path: "/mnt/kube"
+        src: "tec-kube-ctlr:/mnt/ssd/{{ inventory_hostname }}"
+        fstype: "nfs"
+        opts: "rw,sync,hard"
+        state: "present"
+    - name: "reload fstab"
+      command: "systemctl daemon-reload"
+    - name: "mount"
+      command: "mount -a"
+

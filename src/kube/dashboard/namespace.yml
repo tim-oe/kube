@@ -1,6 +1,7 @@
-kind: Namespace
-apiVersion: v1
+---
+kind: "Namespace"
+apiVersion: "v1"
 metadata:
-  name: kubernetes-dashboard
+  name: "kubernetes-dashboard"
   labels:
-    name: kubernetes-dashboard
+    name: "kubernetes-dashboard"

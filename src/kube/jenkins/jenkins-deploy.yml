@@ -1,37 +1,38 @@
-apiVersion: apps/v1
-kind: Deployment
+---
+apiVersion: "apps/v1"
+kind: "Deployment"
 metadata:
-  name: jenkins  # Sets Deployment name
-  namespace: jenkins
+  name: "jenkins"
+  namespace: "jenkins"
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: jenkins
+      app: "jenkins"
   template:
     metadata:
       labels:
-        app: jenkins
+        app: "jenkins"
     spec:
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
-            - matchExpressions:
-              - key: kubernetes.io/arch
-                operator: In
-                values:
-                - amd64
-                - arm64
+              - matchExpressions:
+                  - key: "kubernetes.io/arch"
+                    operator: "In"
+                    values:
+                      - "amd64"
+                      - "arm64"
       containers:
-        - name: jenkins
-          image: jenkins/jenkins:lts-jdk17
+        - name: "jenkins"
+          image: "jenkins/jenkins:lts-jdk17"
           imagePullPolicy: "IfNotPresent"
           ports:
-            - containerPort: 8080  # Exposes container port
+            - containerPort: 8080
           volumeMounts:
-            - name: jenkins-home
-              mountPath: var/jenkins_home
+            - name: "jenkins-home"
+              mountPath: "var/jenkins_home"
           resources:
             requests:
               cpu: "1"
@@ -40,8 +41,8 @@ spec:
               cpu: "1"
               memory: "2048Mi"
       volumes:
-        - name: jenkins-home
+        - name: "jenkins-home"
           persistentVolumeClaim:
-            claimName: jenkins-pvc
+            claimName: "jenkins-pvc"
       nodeSelector:
-        kubernetes.io/os: linux
+        kubernetes.io/os: "linux"

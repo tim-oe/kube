@@ -1,31 +1,15 @@
-# kind: PersistentVolume
-# apiVersion: v1
-# metadata:
-#   name: postgres-pv
-#   namespace: sonar
-#   labels:
-#     app: postgres
-# spec:
-#   storageClassName: local-path
-#   capacity:
-#     storage: 2Gi
-#   accessModes:
-#     - ReadWriteOnce
-#   local:
-#     path: "/mnt/kube/sonar/sq"
 ---
-kind: PersistentVolumeClaim
-apiVersion: v1
+kind: "PersistentVolumeClaim"
+apiVersion: "v1"
 metadata:
-  name: postgres-pvc
-  namespace: sonar
+  name: "postgres-pvc"
+  namespace: "sonar"
   labels:
-    app: postgres
+    app: "postgres"
 spec:
-  # volumeName: postgres-pv
-  storageClassName: local-path
+  storageClassName: "local-path"
   accessModes:
-    - ReadWriteOnce 
+    - "ReadWriteOnce"
   resources:
     requests:
-      storage: 2Gi 
+      storage: "2Gi"

@@ -1,33 +1,31 @@
-# https://docs.k3s.io/upgrades
-# TODO get upgrade controller working...
 ---
-- name: upgrade kube worker nodes
-  hosts: kube_nodes
+- name: "upgrade kube worker nodes"
+  hosts: "kube_nodes"
   become: true
-  become_user: root
+  become_user: "root"
   vars:
-    cmd_file: /boot/firmware/cmdline.txt
-    k3s_install : /opt/k3ssetup
+    cmd_file: "/boot/firmware/cmdline.txt"
+    k3s_install: "/opt/k3ssetup"
   environment:
     K3S_URL: "https://{{ ctlr_host }}:6443"
     K3S_TOKEN: "{{ cluster_token }}"
   tasks:
-    - name: gather service facts
-      ansible.builtin.service_facts:
-    - name: kill k3s.
-      shell: /usr/local/bin/k3s-killall.sh
-    - name: Download k3s script.
+    - name: "gather service facts"
+      ansible.builtin.service_facts: null
+    - name: "kill k3s."
+      shell: "/usr/local/bin/k3s-killall.sh"
+    - name: "Download k3s script."
       get_url:
-        url: https://get.k3s.io
+        url: "https://get.k3s.io"
         dest: "{{ k3s_install }}"
         mode: 700
-    - name: Install k3s.
+    - name: "Install k3s."
       shell: "{{ k3s_install }}"
-    - name: Reboot the box to complete the upgrade.
-      reboot:     
+    - name: "Reboot the box to complete the upgrade."
+      reboot:
         msg: "Reboot initiated by k3s upgrade"
         connect_timeout: 5
         reboot_timeout: 300
         pre_reboot_delay: 0
         post_reboot_delay: 10
-        test_command: uptime
+        test_command: "uptime"

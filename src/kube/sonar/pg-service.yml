@@ -1,15 +1,15 @@
-# posgres service
-apiVersion: v1
-kind: Service
+---
+apiVersion: "v1"
+kind: "Service"
 metadata:
-  name: postgres # Sets service name
-  namespace: sonar
+  name: "postgres"
+  namespace: "sonar"
   labels:
-    app: postgres # Labels and Selectors
+    app: "postgres"
 spec:
-  type: NodePort # Sets service type
+  type: "NodePort"
   ports:
-    - port: 5432 # Sets port to run the postgres application
+    - port: 5432
       nodePort: 31032
   selector:
-    app: postgres
+    app: "postgres"

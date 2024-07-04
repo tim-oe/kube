@@ -14,6 +14,7 @@
   - [terraform](https://developer.hashicorp.com/terraform/docs)
   - [helm](https://helm.sh/docs/)
   - [argocd](https://argo-cd.readthedocs.io/en/stable/)
+    - [k3s install](https://blog.differentpla.net/blog/2022/02/02/argocd/)
 - migrate docker home services
   - to kube manifest
   - to terraform resources

@@ -1,16 +1,16 @@
-apiVersion: v1
-kind: Service
+---
+apiVersion: "v1"
+kind: "Service"
 metadata:
-  name: sonar
-  namespace: sonar
+  name: "sonar"
+  namespace: "sonar"
   labels:
-    app: sonar
+    app: "sonar"
 spec:
-  # expose externally 
-  type: NodePort
+  type: "NodePort"
   ports:
-  - port: 9000
-    nodePort: 31900
-    name: sonar
+    - port: 9000
+      nodePort: 31900
+      name: "sonar"
   selector:
-    app: sonar
+    app: "sonar"

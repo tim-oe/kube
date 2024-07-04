@@ -6,7 +6,7 @@ tasks.register('awsConfig') {
         exec {
             workingDir '.'
             commandLine 'bash', '-c',
-            'aws eks update-kubeconfig --name cicd'
+                    'aws eks update-kubeconfig --name cicd'
         }
     }
 }
@@ -19,11 +19,11 @@ tasks.register('awsCluster') {
         exec {
             workingDir '.'
             commandLine 'bash', '-c',
-            'aws eks create-cluster ' + 
-            '--name cicd ' + 
-            '--kubernetes-version 1.27 ' +
-            '--role-arn arn:aws:iam::744686699669:role/EKSClusterRole ' +
-            '--resources-vpc-config subnetIds=subnet-57a4b40e,subnet-756ec211,securityGroupIds=sg-9e97a0f9'
+                    'aws eks create-cluster ' +
+                    '--name cicd ' +
+                    '--kubernetes-version 1.27 ' +
+                    '--role-arn arn:aws:iam::744686699669:role/EKSClusterRole ' +
+                    '--resources-vpc-config subnetIds=subnet-57a4b40e,subnet-756ec211,securityGroupIds=sg-9e97a0f9'
         }
     }
 }

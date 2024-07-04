@@ -1,0 +1,51 @@
+---
+- name: "install nfs server and create shares"
+  hosts: "kube_controller"
+  become: true
+  become_user: "root"
+  vars:
+    base_dir: "/mnt/ssd"
+    config_file: "/etc/exports"
+  tasks:
+    - name: "Update apt repo and cache."
+      apt:
+        update_cache: true
+        cache_valid_time: 3600
+    - name: "apt install nfs server package"
+      apt:
+        name: "nfs-kernel-server"
+        state: "present"
+    - name: "Create n1 directory if it does not exist"
+      ansible.builtin.file:
+        path: "{{ base_dir }}/tec-kube-n1"
+        state: "directory"
+        mode: "0777"
+    - name: "Create n2 directory if it does not exist"
+      ansible.builtin.file:
+        path: "{{ base_dir }}/tec-kube-n2"
+        state: "directory"
+        mode: "0777"
+    - name: "Create n3 directory if it does not exist"
+      ansible.builtin.file:
+        path: "{{ base_dir }}/tec-kube-n3"
+        state: "directory"
+        mode: "0777"
+    - name: "add node shares"
+      blockinfile:
+        state: "present"
+        insertafter: "EOF"
+        dest: "{{ config_file }}"
+        marker: "# _NODE_SHARES_"
+        append_newline: true
+        prepend_newline: true
+        content:
+          "{{ base_dir }}/tec-kube-n1 *(rw,all_squash,insecure,async,no_subtree_check,anonuid=1000,anongid=1000)\n\
+          {{ base_dir }}/tec-kube-n2 *(rw,all_squash,insecure,async,no_subtree_check,anonuid=1000,anongid=1000)\n\
+          {{ base_dir }}/tec-kube-n3 *(rw,all_squash,insecure,async,no_subtree_check,anonuid=1000,anongid=1000)\n"
+    - name: "export nfs shares"
+      command: "exportfs -ra"
+    - name: "reload nfs server"
+      ansible.builtin.systemd_service:
+        state: "restarted"
+        daemon_reload: true
+        name: "nfs-kernel-server"

@@ -1,32 +1,109 @@
-tasks.register('aptupdate') {
+// generic task to run ansible playbook
+tasks.register('playbook') {
+    group = "ansible"
+    doLast {
+    }
+    if (project.hasProperty('ansible_playbook')) {
+        exec {
+            workingDir '.'
+            commandLine 'ansible-playbook',  "${ansible_playbook}"
+        }
+    } else {
+        println "need to set -ansible_playbook=[src relative path to playbook.yml file]"
+    }
+}
+
+tasks.register('aptupdate', GradleBuild) {
     description = 'run ansible apt update script'
     group = "ansible"
-    doLast {
-        exec {
-            workingDir '.'
-            commandLine 'ansible-playbook',  'src/ansible/pi/update-apt.yml'
-        }
-    }
+    startParameter.projectProperties = ['ansible_playbook':'src/ansible/pi/update-apt.yml']
+    tasks = ['playbook']
 }
 
-tasks.register('k3sCtlrUpdate') {
-    description = 'run ansible k3s update script'
+// https://anthonynsimon.com/blog/kubernetes-cluster-raspberry-pi/#what-is-k3s-and-how-is-it-different-than-kubernetes
+// http://armand.nz/notes/k3s/Kubernetes%20Cluster%20on%20Raspberry%20Pi%20using%20Ubuntu%2022.04%20LTS%20and%20K3s
+tasks.register('kubeCommon', GradleBuild) {
+    description = 'run ansible kube common script'
     group = "ansible"
-    doLast {
-        exec {
-            workingDir '.'
-            commandLine 'ansible-playbook',  'src/ansible/pi/kube-ctlr-upgrade.yml'
-        }
-    }
+    startParameter.projectProperties = ['ansible_playbook':'src/ansible/pi/kube-common.yml']
+    tasks = ['playbook']
 }
 
-tasks.register('k3sNodeUpdate') {
-    description = 'run ansible k3s update script'
+// https://forums.raspberrypi.com/viewtopic.php?t=291640
+// https://raspberrytips.com/disable-leds-on-raspberry-pi/
+// https://lindevs.com/turn-off-built-in-leds-on-raspberry-pi/
+// poe led no control
+// TODO backup file creation causing errors
+tasks.register('device', GradleBuild) {
+    description = 'run ansible script to configure device settings'
     group = "ansible"
-    doLast {
-        exec {
-            workingDir '.'
-            commandLine 'ansible-playbook',  'src/ansible/pi/kube-node-upgrade.yml'
-        }
-    }
+    startParameter.projectProperties = ['ansible_playbook':'src/ansible/pi/device-settings.yml']
+    tasks = ['playbook']
+}
+
+// https://anthonynsimon.com/blog/kubernetes-cluster-raspberry-pi/#what-is-k3s-and-how-is-it-different-than-kubernetes
+// http://armand.nz/notes/k3s/Kubernetes%20Cluster%20on%20Raspberry%20Pi%20using%20Ubuntu%2022.04%20LTS%20and%20K3s
+// https://docs.k3s.io/installation/uninstall
+// TODO remove traefik https://qdnqn.com/k3s-remove-traefik/
+// use system upgrade controller instead
+tasks.register('k3sCtlrUpdate', GradleBuild) {
+    description = 'run ansible k3s ctrl update script'
+    group = "ansible"
+    startParameter.projectProperties = ['ansible_playbook':'src/ansible/pi/kube-ctlr-upgrade.yml']
+    tasks = ['playbook']
+}
+
+// https://docs.k3s.io/upgrades
+// use system upgrade controller instead
+// https://docs.k3s.io/upgrades/automated
+// https://github.com/rancher/system-upgrade-controller
+tasks.register('k3sNodeUpdate', GradleBuild) {
+    description = 'run ansible k3s node update script'
+    group = "ansible"
+    startParameter.projectProperties = ['ansible_playbook':'src/ansible/pi/kube-node-upgrade.yml']
+    tasks = ['playbook']
+}
+
+// https://pimylifeup.com/raspberry-pi-nfs/
+tasks.register('nfsServer', GradleBuild) {
+    description = 'run ansible nfs server script'
+    group = "ansible"
+    startParameter.projectProperties = ['ansible_playbook':'src/ansible/pi/nfs-server.yml']
+    tasks = ['playbook']
+}
+
+// https://pimylifeup.com/raspberry-pi-nfs-client/
+tasks.register('nfsClient', GradleBuild) {
+    description = 'run ansible nfs client script'
+    group = "ansible"
+    startParameter.projectProperties = ['ansible_playbook':'src/ansible/pi/nfs-client.yml']
+    tasks = ['playbook']
+}
+
+// https://askubuntu.com/questions/346857/how-do-i-force-ssh-to-only-allow-users-with-a-key-to-log-in
+// https://askubuntu.com/questions/1338807/default-sshd-config-file-for-ubunu-20-04
+tasks.register('sshLock', GradleBuild) {
+    description = 'run ansible ssh lockdown script'
+    group = "ansible"
+    startParameter.projectProperties = ['ansible_playbook':'src/ansible/pi/ssh-lockdown.yml']
+    tasks = ['playbook']
+}
+
+// https://pimylifeup.com/raspberry-pi-swap-file/
+tasks.register('swap', GradleBuild) {
+    description = 'run ansible swap file script'
+    group = "ansible"
+    startParameter.projectProperties = ['ansible_playbook':'src/ansible/pi/swap-file.yml']
+    tasks = ['playbook']
+}
+
+// hack for issue with service not finding the network interface
+// this forces service on eth0
+// it also makes sure SSH is running
+// https://askubuntu.com/questions/1217252/boot-process-hangs-at-systemd-networkd-wait-online
+tasks.register('sysdNetWait', GradleBuild) {
+    description = 'run ansible systemd newtork wait script'
+    group = "ansible"
+    startParameter.projectProperties = ['ansible_playbook':'src/ansible/pi/systemd-networkd-wait-online.yml']
+    tasks = ['playbook']
 }
