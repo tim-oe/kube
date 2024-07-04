@@ -89,7 +89,8 @@ tasks.register('sshLock', GradleBuild) {
     tasks = ['playbook']
 }
 
-// https://pimylifeup.com/raspberry-pi-swap-file/
+// since kube is running ubuntu then it's a standard sawp file
+// https://www.digitalocean.com/community/tutorials/how-to-add-swap-space-on-ubuntu-22-04
 tasks.register('swap', GradleBuild) {
     description = 'run ansible swap file script'
     group = "ansible"
