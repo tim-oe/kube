@@ -1,6 +1,6 @@
 ---
 - name: "change pi device settings"
-  hosts: "all"
+  hosts: "kube_all"
   become: true
   become_user: "root"
   vars:

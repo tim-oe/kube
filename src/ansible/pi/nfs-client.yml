@@ -28,4 +28,3 @@
       command: "systemctl daemon-reload"
     - name: "mount"
       command: "mount -a"
-

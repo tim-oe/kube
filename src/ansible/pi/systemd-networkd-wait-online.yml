@@ -1,6 +1,6 @@
 ---
 - name: "Hack systemd-networkd-wait-online to use eth0."
-  hosts: "all"
+  hosts: "kube_all"
   become: true
   become_user: "root"
   vars:

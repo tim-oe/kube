@@ -1,6 +1,6 @@
 ---
 - name: "Update OS packages reboot if kernel update"
-  hosts: "all"
+  hosts: "kube_all"
   become: true
   become_user: "root"
   tasks:

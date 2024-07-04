@@ -23,6 +23,39 @@ tasks.register('updateKubectl') {
     }
 }
 
+// https://blog.devgenius.io/kubernetes-resource-discovery-how-to-list-all-resources-in-a-namespace-555d4e662cfd
+tasks.register('deleteAll') {
+    doLast {
+        if (project.hasProperty('namespace')) {
+            exec {
+                workingDir '.'
+                commandLine 'bash', '-c',
+                        'kubectl ' + "-n=${namespace}" + ' delete all --all'
+            }
+            exec {
+                workingDir '.'
+                commandLine 'bash', '-c',
+                        'kubectl api-resources --verbs=list --namespaced -o name ' +
+                        '| xargs -t -i kubectl ' + "-n=${namespace}" + ' delete {} --all'
+            }
+            exec {
+                workingDir '.'
+                ignoreExitValue true
+                commandLine 'bash', '-c',
+                        'kubectl delete events -n kube-system'
+            }
+            exec {
+                workingDir '.'
+                ignoreExitValue true
+                commandLine 'bash', '-c',
+                        'kubectl delete namespace ' + "${namespace}"
+            }
+        } else {
+            println "need to set -Pnamespace=[resource namespace]"
+        }
+    }
+}
+
 // https://hub.docker.com/_/sonarqube/
 // https://serverfault.com/questions/956361/kubernetes-docker-and-vm-max-map-count
 // https://hub.docker.com/_/postgres/
@@ -76,7 +109,7 @@ tasks.register('loadSonar') {
     }
 }
 
-tasks.register('delSonar', GradleBuild) {
+tasks.register('rmSonar', GradleBuild) {
     description = 'delete postgres kube resources'
     group = "container"
     startParameter.projectProperties = ['namespace':'sonar']
@@ -95,7 +128,7 @@ tasks.register('delSonar', GradleBuild) {
     }
 }
 
-tasks.register('loadjenkins') {
+tasks.register('loadJenkins') {
     description = 'load postgres container to kube'
     group = "container"
     doLast {
@@ -122,7 +155,7 @@ tasks.register('loadjenkins') {
     }
 }
 
-tasks.register('deljenkins', GradleBuild) {
+tasks.register('rmJenkins', GradleBuild) {
     description = 'delete jenkins kube resources'
     group = "container"
     startParameter.projectProperties = ['namespace':'jenkins']
@@ -136,7 +169,7 @@ tasks.register('deljenkins', GradleBuild) {
     }
 }
 
-tasks.register('jenkinssecret') {
+tasks.register('jenkinsSecret') {
     description = 'get initial jenkins password'
     group = "container"
     doLast {
@@ -154,7 +187,7 @@ tasks.register('jenkinssecret') {
 
 // dns utilities to see host information
 // https://dev.to/vepo/finding-dns-for-kubernetes-service-3p0e
-tasks.register('loaddnsutils') {
+tasks.register('loadDnsutils') {
     description = 'load dnsutils container to kube'
     group = "container"
     doLast {
@@ -165,7 +198,7 @@ tasks.register('loaddnsutils') {
     }
 }
 
-tasks.register('delDnsutils') {
+tasks.register('rmDnsutils') {
     description = 'delete dnsutils container to kube'
     group = "container"
     doLast {
@@ -178,7 +211,7 @@ tasks.register('delDnsutils') {
 
 // https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/
 // https://github.com/kubernetes/dashboard/blob/master/docs/user/access-control/creating-sample-user.md
-tasks.register('loaddashboard') {
+tasks.register('loadDashboard') {
     description = 'load postgres container to kube'
     group = "container"
     doLast {
@@ -217,7 +250,7 @@ tasks.register('dashboadtoken') {
     }
 }
 
-tasks.register('deldashboard', GradleBuild) {
+tasks.register('rmDashboard', GradleBuild) {
     description = 'delete jenkins kube resources'
     group = "container"
     startParameter.projectProperties = ['namespace':'kubernetes-dashboard']
@@ -255,7 +288,7 @@ tasks.register('loaddargo') {
     }
 }
 
-tasks.register('delargo', GradleBuild) {
+tasks.register('rmArgo', GradleBuild) {
     description = 'delete argocd container to kube'
     group = "container"
     startParameter.projectProperties = ['namespace':'argocd']
@@ -268,7 +301,7 @@ tasks.register('delargo', GradleBuild) {
     // }
 }
 
-// https://kubernetes.github.io/ingress-nginx/deploy/#bare-metal-clusters
+// https://kubernetes.github.io/ingress-nginx/
 tasks.register('loadEnginx') {
     description = 'load nginx container to kube'
     group = "container"
@@ -281,7 +314,7 @@ tasks.register('loadEnginx') {
     }
 }
 
-tasks.register('deEnginx', GradleBuild) {
+tasks.register('rmEnginx', GradleBuild) {
     description = 'delete nginx container to kube'
     group = "container"
     startParameter.projectProperties = ['namespace':'ingress-nginx']
@@ -345,7 +378,7 @@ tasks.register('loadUpgradeCtlr') {
     }
 }
 
-tasks.register('delUpgradeCtlr', GradleBuild) {
+tasks.register('rmUpgradeCtlr', GradleBuild) {
     description = 'delete nginx container to kube'
     group = "container"
     startParameter.projectProperties = ['namespace':'system-upgrade']
@@ -374,39 +407,6 @@ tasks.register('delUpgradeCtlr', GradleBuild) {
         exec {
             workingDir '.'
             commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-ctlr', 'k3s-upgrade-'
-        }
-    }
-}
-
-// https://blog.devgenius.io/kubernetes-resource-discovery-how-to-list-all-resources-in-a-namespace-555d4e662cfd
-tasks.register('deleteAll') {
-    doLast {
-        if (project.hasProperty('namespace')) {
-            exec {
-                workingDir '.'
-                commandLine 'bash', '-c',
-                        'kubectl ' + "-n=${namespace}" + ' delete all --all'
-            }
-            exec {
-                workingDir '.'
-                commandLine 'bash', '-c',
-                        'kubectl api-resources --verbs=list --namespaced -o name ' +
-                        '| xargs -t -i kubectl ' + "-n=${namespace}" + ' delete {} --all'
-            }
-            exec {
-                workingDir '.'
-                ignoreExitValue true
-                commandLine 'bash', '-c',
-                        'kubectl delete events -n kube-system'
-            }
-            exec {
-                workingDir '.'
-                ignoreExitValue true
-                commandLine 'bash', '-c',
-                        'kubectl delete namespace ' + "${namespace}"
-            }
-        } else {
-            println "need to set -Pnamespace=[resource namespace]"
         }
     }
 }
