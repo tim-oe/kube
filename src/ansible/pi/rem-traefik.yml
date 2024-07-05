@@ -1,0 +1,26 @@
+---
+- name: "disable and remove traefik"
+  hosts: "kube_controller"
+  become: true
+  become_user: "root"
+  vars:
+    systemd_file: "/etc/systemd/system/k3s.service"
+  tasks:
+    - name: "Remove treafik chart"
+      ansible.builtin.file:
+        path: "/var/lib/rancher/k3s/server/manifests/traefik.yaml"
+        state: "absent"
+    - name: "add treafik skip file"
+      ansible.builtin.file:
+        path: "/var/lib/rancher/k3s/server/manifests/traefik.yaml.skip"
+        state: "touch"
+    - name: "add traefik disable to k3s service"
+      ansible.builtin.replace:
+        path: "{{ systemd_file }}"
+        regexp: "(?s)^ExecStart=.*server.*\\\\"
+        replace: "ExecStart=/usr/local/bin/k3s server --disable=traefik"
+    - name: "reload k3s server"
+      ansible.builtin.systemd_service:
+        state: "restarted"
+        daemon_reload: true
+        name: "k3s"

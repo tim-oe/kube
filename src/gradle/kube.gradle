@@ -129,7 +129,7 @@ tasks.register('rmSonar', GradleBuild) {
 }
 
 tasks.register('loadJenkins') {
-    description = 'load postgres container to kube'
+    description = 'load jenkins container to kube'
     group = "container"
     doLast {
         exec {

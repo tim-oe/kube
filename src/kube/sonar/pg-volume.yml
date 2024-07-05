@@ -7,7 +7,7 @@ metadata:
   labels:
     app: "postgres"
 spec:
-  storageClassName: "local-path"
+  storageClassName: "nfs"
   accessModes:
     - "ReadWriteOnce"
   resources:

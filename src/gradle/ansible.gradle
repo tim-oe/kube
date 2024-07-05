@@ -70,6 +70,22 @@ tasks.register('k3sCtlrUpdate', GradleBuild) {
     tasks = ['playbook']
 }
 
+// https://github.com/k3s-io/k3s/issues/1160
+// https://medium.com/@bilsted/how-to-disable-traefik-and-metrics-server-on-k3s-b7dab4ca3aae
+// https://qdnqn.com/k3s-remove-traefik/
+tasks.register('rmTraefik', GradleBuild) {
+    description = 'run ansible remove traefik controller script'
+    group = "ansible"
+    startParameter.projectProperties = ['ansible_playbook':'src/ansible/pi/rem-traefik.yml']
+    tasks = ['playbook']
+    doLast {
+        exec {
+            workingDir '.'
+            commandLine 'kubectl','-n','kube-system','delete','helmchart','traefik','traefik-crd'
+        }
+    }
+}
+
 // https://docs.k3s.io/upgrades
 // use system upgrade controller instead
 // https://docs.k3s.io/upgrades/automated

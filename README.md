@@ -93,7 +93,7 @@
 - got a working version for minikube [here](https://stackoverflow.com/questions/51751462/nginx-ingress-jenkins-path-rewrite-configuration-not-working)
 - [nginx ingres controller](https://kubernetes.github.io/ingress-nginx/)
 - [ingress endpoint addr](https://stackoverflow.com/questions/49845021/getting-an-kubernetes-ingress-endpoint-ip-address)
-- still wip
+- need to determine ip mappings but seems i can hit from any node ip...
 
 ### aws
 
