@@ -14,12 +14,12 @@
         state: "present"
     - name: "Create a directory if it does not exist"
       ansible.builtin.file:
-        path: "/mnt/kube"
+        path: "/var/lib/rancher/k3s/storage"
         state: "directory"
         mode: "0777"
     - name: "add mount"
       ansible.posix.mount:
-        path: "/mnt/kube"
+        path: "/var/lib/rancher/k3s/storage"
         src: "tec-kube-ctlr:/mnt/ssd/{{ inventory_hostname }}"
         fstype: "nfs"
         opts: "rw,sync,hard"

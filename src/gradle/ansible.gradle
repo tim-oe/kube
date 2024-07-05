@@ -1,3 +1,20 @@
+tasks.register('resetHost') {
+    description = 'reset known host for tec-test'
+    group = "hosts"
+    doLast {
+        exec {
+            workingDir '.'
+            commandLine 'bash', '-c',
+                    "ssh-keygen -R ${target_host}"
+        }
+        exec {
+            workingDir '.'
+            commandLine 'bash', '-c',
+                    "ssh-keyscan -T 30 -H ${target_host} >> ~/.ssh/known_hosts"
+        }
+    }
+}
+
 // generic task to run ansible playbook
 tasks.register('playbook') {
     group = "ansible"
@@ -65,6 +82,7 @@ tasks.register('k3sNodeUpdate', GradleBuild) {
 }
 
 // https://pimylifeup.com/raspberry-pi-nfs/
+// https://www.phillipsj.net/posts/k3s-enable-nfs-storage/
 tasks.register('nfsServer', GradleBuild) {
     description = 'run ansible nfs server script'
     group = "ansible"
@@ -73,6 +91,7 @@ tasks.register('nfsServer', GradleBuild) {
 }
 
 // https://pimylifeup.com/raspberry-pi-nfs-client/
+// https://github.com/rancher/local-path-provisioner/blob/master/README.md#installation
 tasks.register('nfsClient', GradleBuild) {
     description = 'run ansible nfs client script'
     group = "ansible"

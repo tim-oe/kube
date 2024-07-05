@@ -1,9 +1,9 @@
 # kubernetes workbench
 
-![pi 3 noder cluster](docs/img/pi-kube.jpg?raw=true)
+![pi 3 node cluster](docs/img/pi-kube.jpg?raw=true)
 
 - [setup guide (used to install)](https://anthonynsimon.com/blog/kubernetes-cluster-raspberry-pi/)
-- [another seup guide](https://blog.alexellis.io/self-hosting-kubernetes-on-your-raspberry-pi/)
+- [another setup guide](https://blog.alexellis.io/self-hosting-kubernetes-on-your-raspberry-pi/)
 
 ## goals
 
@@ -38,6 +38,7 @@
   - [system upgrade controller](https://github.com/rancher/system-upgrade-controller)
     - [more howto](https://www.cncf.io/blog/2020/11/25/upgrade-a-k3s-kubernetes-cluster-with-system-upgrade-controller/)
   - [local-path pv and pvc](https://github.com/rancher/local-path-provisioner)
+  - [NFS Volumes](https://www.phillipsj.net/posts/k3s-enable-nfs-storage/)
 
 ### terraform
 
@@ -91,6 +92,7 @@
 - [on minkube](https://kubernetes.io/docs/tasks/access-application-cluster/ingress-minikube/)
 - got a working version for minikube [here](https://stackoverflow.com/questions/51751462/nginx-ingress-jenkins-path-rewrite-configuration-not-working)
 - [nginx ingres controller](https://kubernetes.github.io/ingress-nginx/)
+- [ingress endpoint addr](https://stackoverflow.com/questions/49845021/getting-an-kubernetes-ingress-endpoint-ip-address)
 - still wip
 
 ### aws
