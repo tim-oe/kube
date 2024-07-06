@@ -1,0 +1,21 @@
+---
+- name: "add local cert authority"
+  hosts: "kube_all"
+  become: true
+  become_user: "root"
+  tasks:
+    - name: "Update apt repo and cache."
+      apt:
+        update_cache: true
+        cache_valid_time: 3600
+    - name: "apt add ca-certificates"
+      apt:
+        name: "ca-certificates"
+        state: "present"
+    - name: "add local ca cert"
+      ansible.builtin.copy:
+        src: "/mnt/clones/data/keys/tec+house+interauthority.crt"
+        dest: "/usr/local/share/ca-certificates/tec+house+interauthority.crt"
+        mode: "0755"
+    - name: "reload certs"
+      command: "update-ca-certificates"

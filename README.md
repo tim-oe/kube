@@ -88,12 +88,14 @@
   - still wip on cluster
 
 ### ingress
-
-- [on minkube](https://kubernetes.io/docs/tasks/access-application-cluster/ingress-minikube/)
-- got a working version for minikube [here](https://stackoverflow.com/questions/51751462/nginx-ingress-jenkins-path-rewrite-configuration-not-working)
+- minikube
+  - [on minkube](https://kubernetes.io/docs/tasks/access-application-cluster/ingress-minikube/)
+  - got a working version for minikube [here](https://stackoverflow.com/questions/51751462/nginx-ingress-jenkins-path-rewrite-configuration-not-working)
+- k3s
 - [nginx ingres controller](https://kubernetes.github.io/ingress-nginx/)
-- [ingress endpoint addr](https://stackoverflow.com/questions/49845021/getting-an-kubernetes-ingress-endpoint-ip-address)
-- need to determine ip mappings but seems i can hit from any node ip...
+- [key is to configure loadbalancer](https://blog.thenets.org/how-to-create-a-k3s-cluster-with-nginx-ingress-controller/)
+- TODO need to determine ip mappings but seems i can hit from any node ip...
+  - [ingress endpoint addr](https://stackoverflow.com/questions/49845021/getting-an-kubernetes-ingress-endpoint-ip-address)
 
 ### aws
 
@@ -107,11 +109,14 @@
 - proper host ingress on cluster
 - https via [opnsense CA](https://www.ssltrust.com/help/setup-guides/use-opnsense-ca-certificate-authority)
 - [ArgoCD](https://argo-cd.readthedocs.io/en/stable/getting_started/)
+  - [http access issue](https://github.com/argoproj/argo-cd/issues/2953)
 - deploy to [GKE](https://cloud.google.com/kubernetes-engine/)
 - deploy to [EKS](https://aws.amazon.com/eks/)
   - [aws provitioning](https://stackoverflow.com/questions/75758115/persistentvolumeclaim-is-stuck-waiting-for-a-volume-to-be-created-either-by-ex)
 - [pi monitoring](https://dirtyoptics.com/how-to-monitor-a-raspberry-pi-remotely/)
 - [kube jenkins agents](https://plugins.jenkins.io/kubernetes/)
+- [longhorn](https://github.com/longhorn/longhorn)
+  - [ks3 install](https://medium.com/@pongsatt/k3s-kubernetes-cluster-storage-with-longhorn-ff201947d3f5)
 
 ## FAQ
 

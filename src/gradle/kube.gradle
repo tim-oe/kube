@@ -173,6 +173,17 @@ tasks.register('jenkinsSecret') {
     description = 'get initial jenkins password'
     group = "container"
     doLast {
+        def stdout = new ByteArrayOutputStream()
+        exec {
+            workingDir '.'
+            standardOutput = stdout;
+            commandLine 'bash', '-c',
+                'kubectl get pod -n=jenkins | grep jenkins-'
+        }
+
+        project.ext.jenkins_pod = stdout.toString().trim().replaceFirst("(jenkins-\\w+-\\w+).*", "\$1")
+        println "jenkins pod : [" +  project.jenkins_pod + "]"
+
         if (project.hasProperty('jenkins_pod')) {
             exec {
                 workingDir '.'
@@ -272,7 +283,8 @@ tasks.register('rmDashboard', GradleBuild) {
 }
 
 // https://argo-cd.readthedocs.io/en/stable/getting_started/
-tasks.register('loaddargo') {
+// https://blog.differentpla.net/blog/2022/02/02/argocd/
+tasks.register('loadArgo') {
     description = 'load argcd container to kube'
     group = "container"
     doLast {
@@ -285,6 +297,38 @@ tasks.register('loaddargo') {
             commandLine 'kubectl', 'apply', '-n', 'argocd', '-f',
                     'https://raw.githubusercontent.com/argoproj/argo-cd/master/manifests/install.yaml'
         }
+        // https://blog.differentpla.net/blog/2022/02/02/argocd/#argocd-cmd-params-cmyaml
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/argocd/argocd-cmd-params-cm.yml'
+        }
+        // expose service via nginx ingress
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/argocd/argocd-ingress.yml'
+        }
+        // https://blog.differentpla.net/blog/2022/02/02/argocd/#restart-the-argocd-server-pod
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', '--namespace','argocd', 'rollout','restart','deployment','argocd-server'
+        }
+    }
+}
+
+// https://blog.differentpla.net/blog/2022/02/02/argocd/#log-in
+tasks.register('argoSecret') {
+    description = 'get initial argo password'
+    group = "container"
+    doLast {
+        def stdout = new ByteArrayOutputStream()
+        exec {
+            workingDir '.'
+            standardOutput = stdout;
+            commandLine 'bash', '-c',
+                "kubectl --namespace argocd get secret argocd-initial-admin-secret -o json | jq -r '.data.password' | base64 -d"
+        }
+
+        println "argo admin secret : [" +  stdout.toString().trim() + "]"
     }
 }
 
@@ -293,29 +337,36 @@ tasks.register('rmArgo', GradleBuild) {
     group = "container"
     startParameter.projectProperties = ['namespace':'argocd']
     tasks = ['deleteAll']
-    // doLast {
+    //  doFirst {
     //     exec {
     //         workingDir '.'
-    //         commandLine 'kubectl', 'delete', 'pod', 'dnsutils'
+    //         commandLine 'kubectl', 'delete', '-f', 'https://raw.githubusercontent.com/argoproj/argo-cd/master/manifests/install.yaml'
     //     }
     // }
 }
 
 // https://kubernetes.github.io/ingress-nginx/
+// https://blog.thenets.org/how-to-create-a-k3s-cluster-with-nginx-ingress-controller/
 tasks.register('loadEnginx') {
-    description = 'load nginx container to kube'
+    description = 'load nginx ingress controller to kube'
     group = "container"
     doLast {
         exec {
             workingDir '.'
             commandLine 'kubectl', 'apply', '-f',
-                    'https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.10.0/deploy/static/provider/baremetal/deploy.yaml'
+                    'https://raw.githubusercontent.com/kubernetes/ingress-nginx/release-1.10/deploy/static/provider/baremetal/deploy.yaml'
+        }
+        // need to add actual load balancer...
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f',
+                    'src/kube/nginx/nginx-loadbalancer.yml'
         }
     }
 }
 
 tasks.register('rmEnginx', GradleBuild) {
-    description = 'delete nginx container to kube'
+    description = 'remove nginx ingress controller from kube'
     group = "container"
     startParameter.projectProperties = ['namespace':'ingress-nginx']
     tasks = ['deleteAll']
@@ -379,7 +430,7 @@ tasks.register('loadUpgradeCtlr') {
 }
 
 tasks.register('rmUpgradeCtlr', GradleBuild) {
-    description = 'delete nginx container to kube'
+    description = 'delete upgrade controller from kube'
     group = "container"
     startParameter.projectProperties = ['namespace':'system-upgrade']
     tasks = ['deleteAll']

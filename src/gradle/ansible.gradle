@@ -124,7 +124,7 @@ tasks.register('sshLock', GradleBuild) {
     tasks = ['playbook']
 }
 
-// since kube is running ubuntu then it's a standard sawp file
+// since kube is running ubuntu then it's a standard swap file
 // https://www.digitalocean.com/community/tutorials/how-to-add-swap-space-on-ubuntu-22-04
 tasks.register('swap', GradleBuild) {
     description = 'run ansible swap file script'
@@ -141,5 +141,13 @@ tasks.register('sysdNetWait', GradleBuild) {
     description = 'run ansible systemd newtork wait script'
     group = "ansible"
     startParameter.projectProperties = ['ansible_playbook':'src/ansible/pi/systemd-networkd-wait-online.yml']
+    tasks = ['playbook']
+}
+
+// opnsense CA install
+tasks.register('cacert', GradleBuild) {
+    description = 'run ansible ca cert script'
+    group = "ansible"
+    startParameter.projectProperties = ['ansible_playbook':'src/ansible/pi/ca-cert.yml']
     tasks = ['playbook']
 }
