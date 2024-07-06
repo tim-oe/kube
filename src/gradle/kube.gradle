@@ -178,7 +178,7 @@ tasks.register('jenkinsSecret') {
             workingDir '.'
             standardOutput = stdout;
             commandLine 'bash', '-c',
-                'kubectl get pod -n=jenkins | grep jenkins-'
+                    'kubectl get pod -n=jenkins | grep jenkins-'
         }
 
         project.ext.jenkins_pod = stdout.toString().trim().replaceFirst("(jenkins-\\w+-\\w+).*", "\$1")
@@ -325,7 +325,7 @@ tasks.register('argoSecret') {
             workingDir '.'
             standardOutput = stdout;
             commandLine 'bash', '-c',
-                "kubectl --namespace argocd get secret argocd-initial-admin-secret -o json | jq -r '.data.password' | base64 -d"
+                    "kubectl --namespace argocd get secret argocd-initial-admin-secret -o json | jq -r '.data.password' | base64 -d"
         }
 
         println "argo admin secret : [" +  stdout.toString().trim() + "]"
