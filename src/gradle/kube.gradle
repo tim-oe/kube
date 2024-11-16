@@ -1,4 +1,5 @@
 // https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/
+// TODO https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-using-native-package-management
 tasks.register('updateKubectl') {
     description = 'update kubectl'
     group = "utils"
@@ -128,6 +129,7 @@ tasks.register('rmSonar', GradleBuild) {
     }
 }
 
+// https://www.jenkins.io/doc/book/installing/kubernetes/
 tasks.register('loadJenkins') {
     description = 'load jenkins container to kube'
     group = "container"
@@ -160,14 +162,8 @@ tasks.register('rmJenkins', GradleBuild) {
     group = "container"
     startParameter.projectProperties = ['namespace':'jenkins']
     tasks = ['deleteAll']
-    doLast {
-        exec {
-            workingDir '.'
-            ignoreExitValue true
-            commandLine 'kubectl', 'delete', 'pv',  '-name', 'jenkins-pv'
-        }
-    }
 }
+
 
 tasks.register('jenkinsSecret') {
     description = 'get initial jenkins password'
@@ -219,23 +215,29 @@ tasks.register('rmDnsutils') {
         }
     }
 }
-
+// https://github.com/kubernetes/dashboard/blob/master/docs/user/accessing-dashboard/README.md
+// https://github.com/kubernetes/dashboard/blob/master/docs/user/access-control/README.md
 // https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/
-// https://github.com/kubernetes/dashboard/blob/master/docs/user/access-control/creating-sample-user.md
 tasks.register('loadDashboard') {
     description = 'load postgres container to kube'
     group = "container"
     doLast {
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'create', 'namespace', 'kubernetes-dashboard'
+            commandLine 'bash', '-c',
+                    'helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f',
-                    'https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml',
-                    '-n', 'kubernetes-dashboard'
+            commandLine 'bash', '-c',
+                    'helm upgrade --install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard --create-namespace --namespace kubernetes-dashboard'
         }
+        // WIP ui comes up but can't login...
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/dashboard/ingress.yml'
+        }
+        // https://github.com/kubernetes/dashboard/blob/master/docs/user/access-control/creating-sample-user.md
         exec {
             workingDir '.'
             commandLine 'kubectl', 'apply', '-f', 'src/kube/dashboard/admin-user.yml'
@@ -262,7 +264,7 @@ tasks.register('dashboadtoken') {
 }
 
 tasks.register('rmDashboard', GradleBuild) {
-    description = 'delete jenkins kube resources'
+    description = 'delete kube dashboard kube resources'
     group = "container"
     startParameter.projectProperties = ['namespace':'kubernetes-dashboard']
     tasks = ['deleteAll']
@@ -435,14 +437,6 @@ tasks.register('rmUpgradeCtlr', GradleBuild) {
     startParameter.projectProperties = ['namespace':'system-upgrade']
     tasks = ['deleteAll']
     doLast {
-        copy {
-            from layout.projectDirectory.dir('src/kube/upgradeController/upgrade-plan.yml')
-            into layout.buildDirectory
-            include 'upgrade-plan.yml'
-            expand(
-                    k3s_version: "${K3S_VERSION}"
-                    )
-        }
         exec {
             workingDir '.'
             commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-n1', 'k3s-upgrade-'
