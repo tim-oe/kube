@@ -1,3 +1,8 @@
+# https://forums.raspberrypi.com/viewtopic.php?t=291640
+# https://raspberrytips.com/disable-leds-on-raspberry-pi/
+# https://lindevs.com/turn-off-built-in-leds-on-raspberry-pi/
+# poe led no control
+# backup file creation causing errors
 ---
 - name: "change pi device settings"
   hosts: "kube_all"

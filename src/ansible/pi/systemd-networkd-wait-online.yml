@@ -1,3 +1,5 @@
+# it also makes sure SSH is running
+# https://askubuntu.com/questions/1217252/boot-process-hangs-at-systemd-networkd-wait-online
 ---
 - name: "Hack systemd-networkd-wait-online to use eth0."
   hosts: "kube_all"

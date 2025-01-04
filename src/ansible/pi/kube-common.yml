@@ -1,4 +1,5 @@
----
+# https://anthonynsimon.com/blog/kubernetes-cluster-raspberry-pi/#what-is-k3s-and-how-is-it-different-than-kubernetes
+# http://armand.nz/notes/k3s/Kubernetes%20Cluster%20on%20Raspberry%20Pi%20using%20Ubuntu%2022.04%20LTS%20and%20K3s---
 - name: "Install k3s dependencies"
   hosts: "all"
   become: true

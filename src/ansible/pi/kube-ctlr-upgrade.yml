@@ -1,3 +1,4 @@
+# alternative to using the upgrade controller
 ---
 - name: "upgrade kube controller node"
   hosts: "kube_controller"

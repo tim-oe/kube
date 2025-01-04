@@ -30,13 +30,6 @@ tasks.register('playbook') {
     }
 }
 
-tasks.register('aptupdate', GradleBuild) {
-    description = 'run ansible apt update script'
-    group = "ansible"
-    startParameter.projectProperties = ['ansible_playbook':'src/ansible/pi/update-apt.yml']
-    tasks = ['playbook']
-}
-
 // https://anthonynsimon.com/blog/kubernetes-cluster-raspberry-pi/#what-is-k3s-and-how-is-it-different-than-kubernetes
 // http://armand.nz/notes/k3s/Kubernetes%20Cluster%20on%20Raspberry%20Pi%20using%20Ubuntu%2022.04%20LTS%20and%20K3s
 tasks.register('kubeCommon', GradleBuild) {
@@ -112,24 +105,6 @@ tasks.register('nfsClient', GradleBuild) {
     description = 'run ansible nfs client script'
     group = "ansible"
     startParameter.projectProperties = ['ansible_playbook':'src/ansible/pi/nfs-client.yml']
-    tasks = ['playbook']
-}
-
-// https://askubuntu.com/questions/346857/how-do-i-force-ssh-to-only-allow-users-with-a-key-to-log-in
-// https://askubuntu.com/questions/1338807/default-sshd-config-file-for-ubunu-20-04
-tasks.register('sshLock', GradleBuild) {
-    description = 'run ansible ssh lockdown script'
-    group = "ansible"
-    startParameter.projectProperties = ['ansible_playbook':'src/ansible/pi/ssh-lockdown.yml']
-    tasks = ['playbook']
-}
-
-// since kube is running ubuntu then it's a standard swap file
-// https://www.digitalocean.com/community/tutorials/how-to-add-swap-space-on-ubuntu-22-04
-tasks.register('swap', GradleBuild) {
-    description = 'run ansible swap file script'
-    group = "ansible"
-    startParameter.projectProperties = ['ansible_playbook':'src/ansible/pi/swap-file.yml']
     tasks = ['playbook']
 }
 
