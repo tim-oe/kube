@@ -11,7 +11,7 @@ metadata:
 spec:
   ingressClassName: "nginx"
   rules:
-    - host: "argocd.localdomain"
+    - host: "argocd.kube"
       http:
         paths:
           - pathType: "Prefix"

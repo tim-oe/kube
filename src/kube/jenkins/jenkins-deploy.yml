@@ -26,7 +26,7 @@ spec:
                       - "arm64"
       containers:
         - name: "jenkins"
-          image: "jenkins/jenkins:lts-jdk17"
+          image: "jenkins/jenkins:latest-jdk17"
           imagePullPolicy: "IfNotPresent"
           ports:
             - containerPort: 8080

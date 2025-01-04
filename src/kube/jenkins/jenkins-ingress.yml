@@ -10,7 +10,7 @@ metadata:
 spec:
   ingressClassName: "nginx"
   rules:
-    - host: "jenkins-kube.localdomain"
+    - host: "jenkins.kube"
       http:
         paths:
           - pathType: "Prefix"

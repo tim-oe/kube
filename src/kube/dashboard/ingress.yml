@@ -10,7 +10,7 @@ metadata:
 spec:
   ingressClassName: "nginx"
   rules:
-    - host: "kube-dash.localdomain"
+    - host: "dashboard.kube"
       http:
         paths:
           - pathType: "Prefix"
@@ -19,4 +19,4 @@ spec:
               service:
                 name: "kubernetes-dashboard-kong-proxy"
                 port:
-                  name: https
+                  name: http
