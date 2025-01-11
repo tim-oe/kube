@@ -1,0 +1,63 @@
+// https://developer.hashicorp.com/terraform/cli
+tasks.register('tfInit') {
+    group = "terraform"
+    doLast {
+    }
+    if (project.hasProperty('tf_svc_dir')) {
+        exec {
+            workingDir "${tf_svc_dir}"
+            commandLine 'bash', '-c', 'terraform init'
+        }
+    } else {
+        println "need to set -Ptf_svc_dir=[path to directory holding terraform manifest]"
+    }
+}
+
+tasks.register('tfPlan') {
+    group = "terraform"
+    doLast {
+    }
+    if (project.hasProperty('tf_svc_dir')) {
+        exec {
+            workingDir "${tf_svc_dir}"
+            commandLine 'bash', '-c', 'terraform plan -out tfplan'
+        }
+    } else {
+        println "need to set -Ptf_svc_dir=[path to directory holding terraform manifest]"
+    }
+}
+
+tasks.register('tfApply') {
+    group = "terraform"
+    doLast {
+    }
+    if (project.hasProperty('tf_svc_dir')) {
+        exec {
+            workingDir "${tf_svc_dir}"
+            commandLine 'bash', '-c', 'terraform apply tfplan'
+        }
+    } else {
+        println "need to set -Ptf_svc_dir=[path to directory holding terraform manifest]"
+    }
+}
+
+tasks.register('initJenkins', GradleBuild) {
+    description = 'init jenkins tf service'
+    group = "terraform"
+    startParameter.projectProperties = ['tf_svc_dir':'src/terraform/jenkins']
+    tasks = ['tfInit']
+}
+
+tasks.register('planJenkins', GradleBuild) {
+    description = 'plan jenkins tf service'
+    group = "terraform"
+    startParameter.projectProperties = ['tf_svc_dir':'src/terraform/jenkins']
+    tasks = ['tfPlan']
+}
+
+tasks.register('applyJenkins', GradleBuild) {
+    description = 'apply jenkins tf service'
+    group = "terraform"
+    startParameter.projectProperties = ['tf_svc_dir':'src/terraform/jenkins']
+    tasks = ['tfApply']
+}

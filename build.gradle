@@ -9,12 +9,13 @@ repositories {
 }
 
 spotless {
-    yaml {
-        target '**/*.yml'
-        jackson()
-        prettier()
-        indentWithSpaces()
-    }
+    // this strips comments that should be a show stopper
+    // yaml {
+    //     target '**/*.yml'
+    //     jackson()
+    //     prettier()
+    //     indentWithSpaces()
+    // }
     groovyGradle {
         target '*.gradle','src/gradle/*.gradle'
         greclipse()
@@ -25,3 +26,4 @@ spotless {
 apply from: 'src/gradle/ansible.gradle'
 apply from: 'src/gradle/aws.gradle'
 apply from: 'src/gradle/kube.gradle'
+apply from: 'src/gradle/tf.gradle'

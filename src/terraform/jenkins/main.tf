@@ -2,6 +2,159 @@ provider "kubernetes" {
   config_path = "~/.kube/config"
 }
 
+resource "kubernetes_deployment" "jenkins" {
+  metadata {
+    name      = "jenkins"
+    namespace = "jenkins"
+
+    labels = {
+      "io.kompose.service" = "jenkins"
+    }
+
+    annotations = {
+      "kompose.cmd"     = "kompose --file ../../../../home_server/src/mnt/raid/jenkins/docker-compose.yml convert"
+      "kompose.version" = "1.35.0 (9532ceef3)"
+    }
+  }
+
+  spec {
+    replicas = 1
+
+    selector {
+      match_labels = {
+        "io.kompose.service" = "jenkins"
+      }
+    }
+
+    template {
+      metadata {
+        labels = {
+          "io.kompose.service" = "jenkins"
+        }
+      }
+
+      spec {
+        volume {
+          name = "jenkins-home"
+
+          persistent_volume_claim {
+            claim_name = "jenkins-home"
+          }
+        }
+
+        container {
+          name  = "jenkins"
+          image = "jenkins/jenkins:latest-jdk17"
+
+          port {
+            name           = "web-ui"
+            container_port = 8080
+            protocol       = "TCP"
+          }
+
+          port {
+            name           = "agent"
+            container_port = 50000
+            protocol       = "TCP"
+          }
+
+          env {
+            name  = "JENKINS_OPTS"
+            value = "--httpPort=8080"
+          }
+
+          resources {
+            limits = {
+              cpu    = "500m"
+              memory = "4Gi"
+            }
+
+            requests = {
+              cpu    = "250m"
+              memory = "2Gi"
+            }
+          }
+
+          volume_mount {
+            name       = "jenkins-home"
+            mount_path = "/var/jenkins_home"
+          }
+
+          security_context {
+            privileged = true
+          }
+        }
+
+        restart_policy = "Always"
+        hostname       = "jenkins"
+      }
+    }
+
+    strategy {
+      type = "Recreate"
+    }
+  }
+}
+
+resource "kubernetes_persistent_volume_claim" "jenkins_home" {
+  metadata {
+    name      = "jenkins-home"
+    namespace = "jenkins"
+
+    labels = {
+      "io.kompose.service" = "jenkins-home"
+    }
+  }
+
+  spec {
+    access_modes = ["ReadWriteMany"]
+
+    resources {
+      requests = {
+        storage = "16Gi"
+      }
+    }
+
+    storage_class_name = "nfs"
+  }
+}
+
+resource "kubernetes_service" "jenkins" {
+  metadata {
+    name      = "jenkins"
+    namespace = "jenkins"
+
+    labels = {
+      "io.kompose.service" = "jenkins"
+    }
+
+    annotations = {
+      "kompose.cmd"     = "kompose --file ../../../../home_server/src/mnt/raid/jenkins/docker-compose.yml convert"
+      "kompose.version" = "1.35.0 (9532ceef3)"
+    }
+  }
+
+  spec {
+    port {
+      name        = "web-ui"
+      port        = 8080
+      target_port = "8080"
+    }
+
+    port {
+      name        = "agent"
+      port        = 50000
+      target_port = "50000"
+    }
+
+    selector = {
+      "io.kompose.service" = "jenkins"
+    }
+
+    type = "LoadBalancer"
+  }
+}
+
 resource "kubernetes_namespace" "jenkins" {
   metadata {
     name = "jenkins"
@@ -12,179 +165,6 @@ resource "kubernetes_namespace" "jenkins" {
   }
 }
 
-# pv are global...
-# resource "kubernetes_persistent_volume" "jenkins_pv" {
-#   metadata {
-#     name = "jenkins-pv"
-#     labels = {
-#       type = "local"
-#     }
-#   }
- 
-#   spec {
-#     capacity = {
-#       storage = "2Gi"
-#     }
-#     access_modes = ["ReadWriteOnce"]
-#     storage_class_name = "local-path"
-#     persistent_volume_source {
-#       local  {
-#       }
-#     }
-#     node_affinity {
-#       required {
-#         node_selector_term {
-#           match_expressions {
-#             key      = "kubernetes.io/hostname"
-#             operator = "In"
-#             values   = ["tec-kube-n1", "tec-kube-n2", "tec-kube-n3"]
-#           }
-#         }
-#       }
-#     }
-#   }
-#   depends_on = [kubernetes_namespace.jenkins]
-# }
-
-resource "kubernetes_persistent_volume_claim" "jenkins_pvc" {
-  metadata {
-    name      = "jenkins-pvc"
-    namespace = "jenkins"
-
-    labels = {
-      app = "jenkins"
-    }
-  }
-
-  spec {
-    access_modes = ["ReadWriteOnce"]
-    storage_class_name = "local-path"
-    # volume_name = "jenkins-pv"
-    
-    resources {
-      requests = {
-        storage = "1Gi"
-      }
-    }
-  }
-
-  wait_until_bound = false
-  # depends_on = [kubernetes_persistent_volume.jenkins_pv]
-  depends_on = [kubernetes_namespace.jenkins]
-}
-
-resource "kubernetes_deployment" "jenkins" {
-  metadata {
-    name      = "jenkins"
-    namespace = "jenkins"
-  }
-
-  spec {
-    replicas = 1
-
-    selector {
-      match_labels = {
-        app = "jenkins"
-      }
-    }
-
-    template {
-      metadata {
-        labels = {
-          app = "jenkins"
-        }
-      }
-
-      spec {
-        volume {
-          name = "jenkins-home"
-          persistent_volume_claim {
-            claim_name = "jenkins-pvc"
-          }
-        }
-
-        container {
-          name  = "jenkins"
-          image = "jenkins/jenkins:lts-jdk17"
-
-          port {
-            container_port = 8080
-          }
-
-          resources {
-            limits = {
-              cpu = "1"
-
-              memory = "2Gi"
-            }
-
-            requests = {
-              cpu = "1"
-
-              memory = "512Mi"
-            }
-          }
-
-          volume_mount {
-            name       = "jenkins-home"
-            mount_path = "var/jenkins_home"
-          }
-
-          image_pull_policy = "IfNotPresent"
-        }
-
-        node_selector = {
-          "kubernetes.io/os" = "linux"
-        }
-
-        affinity {
-          node_affinity {
-            required_during_scheduling_ignored_during_execution {
-              node_selector_term {
-                match_expressions {
-                  key      = "kubernetes.io/arch"
-                  operator = "In"
-                  values   = ["amd64", "arm64"]
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  depends_on = [kubernetes_persistent_volume_claim.jenkins_pvc]
-}
-
-resource "kubernetes_service" "jenkins" {
-  metadata {
-    name      = "jenkins"
-    namespace = "jenkins"
-  }
-
-  spec {
-    port {
-      name        = "8080"
-      port        = 8080
-      target_port = "8080"
-      node_port   = 31080
-    }
-
-    port {
-      name        = "50000"
-      port        = 50000
-      target_port = "50000"
-    }
-
-    selector = {
-      app = "jenkins"
-    }
-
-    type = "NodePort"
-  }
-  depends_on = [kubernetes_deployment.jenkins]
-}
-
 resource "kubernetes_ingress_v1" "jenkins_ingress" {
   metadata {
     name      = "jenkins-ingress"
@@ -192,7 +172,6 @@ resource "kubernetes_ingress_v1" "jenkins_ingress" {
 
     annotations = {
       "nginx.ingress.kubernetes.io/add-base-url" = "true"
-
       "nginx.ingress.kubernetes.io/ssl-redirect" = "false"
     }
   }
@@ -201,7 +180,7 @@ resource "kubernetes_ingress_v1" "jenkins_ingress" {
     ingress_class_name = "nginx"
 
     rule {
-      host = "jenkins.tec.net"
+      host = "jenkins.kube"
 
       http {
         path {
@@ -221,5 +200,5 @@ resource "kubernetes_ingress_v1" "jenkins_ingress" {
       }
     }
   }
-  depends_on = [kubernetes_service.jenkins]
 }
+
