@@ -1,18 +1,24 @@
----
-apiVersion: "apps/v1"
-kind: "Deployment"
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: "jenkins"
+  annotations:
+    kompose.cmd: kompose --file ../../../../home_server/src/mnt/raid/jenkins/docker-compose.yml convert
+    kompose.version: 1.35.0 (9532ceef3)
+  labels:
+    io.kompose.service: jenkins
+  name: jenkins
   namespace: "jenkins"
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: "jenkins"
+      io.kompose.service: jenkins
+  strategy:
+    type: Recreate
   template:
     metadata:
       labels:
-        app: "jenkins"
+        io.kompose.service: jenkins
     spec:
       affinity:
         nodeAffinity:
@@ -24,25 +30,35 @@ spec:
                     values:
                       - "amd64"
                       - "arm64"
+    spec:
       containers:
-        - name: "jenkins"
-          image: "jenkins/jenkins:latest-jdk17"
-          imagePullPolicy: "IfNotPresent"
+        - env:
+            - name: JENKINS_OPTS
+              value: --httpPort=8080
+          image: jenkins/jenkins:latest-jdk17
+          name: jenkins
           ports:
-            - containerPort: 8080
-          volumeMounts:
-            - name: "jenkins-home"
-              mountPath: "var/jenkins_home"
+            - name: web-ui
+              containerPort: 8080
+              protocol: TCP
+            - name: agent
+              containerPort: 50000
+              protocol: TCP
+          securityContext:
+            privileged: true
           resources:
             requests:
-              cpu: "1"
-              memory: "512Mi"
+              memory: "2Gi"
+              cpu: "250m"
             limits:
-              cpu: "1"
-              memory: "2048Mi"
+              memory: "4Gi"
+              cpu: "500m"
+          volumeMounts:
+            - mountPath: /var/jenkins_home
+              name: jenkins-home
+      hostname: jenkins
+      restartPolicy: Always
       volumes:
-        - name: "jenkins-home"
+        - name: jenkins-home
           persistentVolumeClaim:
-            claimName: "jenkins-pvc"
-      nodeSelector:
-        kubernetes.io/os: "linux"
+            claimName: jenkins-home

@@ -19,6 +19,9 @@
   - to kube manifest
   - to terraform resources
   - to helm charts
+- longhorn distributive [fs](https://gdha.github.io/pi-stories/pi-stories9/)
+  - [for rancher k3s](https://github.com/sleighzy/raspberry-pi-k3s-homelab/blob/main/rancher-longhorn-storage.md)
+  - [rpi cluster block storage](https://rpi4cluster.com/k3s-storage-setting/)
 
 ## cluster and kube stuff
 
@@ -40,6 +43,8 @@
   - [local-path pv and pvc](https://github.com/rancher/local-path-provisioner)
   - [NFS Volumes](https://www.phillipsj.net/posts/k3s-enable-nfs-storage/)
 
+### kubectl
+  - get logs ```kubectl logs <podname> -f  -n <namespace>```
 ### terraform
 
 - [docs](https://developer.hashicorp.com/terraform?ajs_aid=cbf6f5d7-2a05-47c6-8353-14ea3695c4c4&product_intent=terraform)
