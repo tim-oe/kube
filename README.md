@@ -43,10 +43,21 @@
   - [local-path pv and pvc](https://github.com/rancher/local-path-provisioner)
   - [NFS Volumes](https://www.phillipsj.net/posts/k3s-enable-nfs-storage/)
 
-### kubectl
-  - get logs ```kubectl logs <podname> -f  -n <namespace>```
-### terraform
+### pv/pvc
+- nfs issues 
+  - [k3s](https://github.com/k3s-io/k3s/issues/5165)
+  - [pgsql k3s 1](https://www.reddit.com/r/devops/comments/tuxaak/issues_deploying_postgres_onto_k3s/)
+  - [pgsql k3s 2](https://www.reddit.com/r/kubernetes/comments/tuxar0/issues_deploying_postgres_onto_k3s/)
+  - [possible solution](https://www.itwonderlab.com/postgres-kubernetes-nfs-volume/)
 
+### kubectl
+- get logs ```kubectl logs <podname> -f  -n <namespace>```
+- recycle pod ```kubectl rollout restart deployment <deployment_name> -n <namespace>```
+- check ingress ```kubectl logs -n ingress-nginx deployment/ingress-nginx-controller```
+- create adhok secret ```kubectl create secret generic <name> ...```
+  - for help ```kubectl create secret generic --help```
+
+### terraform
 - [docs](https://developer.hashicorp.com/terraform?ajs_aid=cbf6f5d7-2a05-47c6-8353-14ea3695c4c4&product_intent=terraform)
 - [structure](https://developer.hashicorp.com/terraform/language/modules/develop/structure)
 - providers
@@ -55,26 +66,27 @@
 - [k2tf](https://github.com/sl1pm4t/k2tf)
   - handy for converting kube manifest to terraform
   - not 100% but does most of the brute force work
+- [.gitignore](https://github.com/github/gitignore/blob/main/Terraform.gitignore)
 
 ### ansible
-
 - used to provision PIs
 - [docs](https://access.redhat.com/documentation/en-us/red_hat_ansible_automation_platform/2.4)
 
 ## services
 
 ### dashboard
-
 - [repo](https://github.com/kubernetes/dashboard/tree/master)
 - [doc](https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/)
-- got working via proxy with [kube manifest](https://github.com/kubernetes/dashboard/releases/tag/v3.0.0-alpha0)
-- [helm](https://artifacthub.io/packages/helm/k8s-dashboard/kubernetes-dashboard), better suited for terraform, not currently working
-  - [awaiting responses](https://discuss.kubernetes.io/t/getting-error-trying-to-access-dashoard-helm-install/25651)
-  - [possible solution](https://dev.to/garis_space/terraform-and-helm-to-deploy-the-kubernetes-dashboard-1dpl)
-  - [possible solution](https://opensource.com/article/21/8/terraform-deploy-helm)
+- working with kube manifest and ingress via https
+- auth token embedded in nginx proxy/loadbalancer  
+- TODO load via TF
+
+### jenkins
+  - from docker-comose.yml -> KOMPOSE kube manifest -> k2tf terraform manifest
+  - nfs volume store
+  - nginx ingress
 
 ### sonarqube
-
 - [official docs](https://docs.sonarsource.com/sonarqube/latest/setup-and-upgrade/deploy-on-kubernetes/deploy-sonarqube-on-kubernetes/?gads_campaign=SQ-Hroi-PMax&gads_ad_group=Global&gads_keyword=&gclid=EAIaIQobChMIj7njhtaugQMVLofCCB1hZgc_EAAYAiAAEgLCnfD_BwE)
   - some local glitches i ran into
 - [medium aritcle](https://medium.com/codex/easy-deploy-sonarqube-on-kubernetes-with-yaml-configuration-27f5adc8de90)
@@ -82,19 +94,18 @@
 - [example setup](https://github.com/doctor500/sonarqube-on-kubernetes)
   - more tweaks and hackery
 - [posgres setup](https://adamtheautomator.com/postgres-to-kubernetes/)
+  - [bitnami helm](https://github.com/bitnami/charts/tree/main/bitnami/postgresql)
+  - [possible issue 1](https://github.com/bitnami/charts/issues/7282)
+  - [possible issue 2](https://github.com/helm/charts/issues/9093)
   - went with this and got it working on mimikube
   - still wip on cluster
+  - pgsql service crasing
 
-### jenkins
-
-- [jenkins recomended setup](https://www.jenkins.io/doc/book/installing/kubernetes/)
-  - did not get working made simplified version based on kompose output and much googling
-  - running on minikube
-  - still wip on cluster
 
 ### ingress
 - minikube
   - [on minkube](https://kubernetes.io/docs/tasks/access-application-cluster/ingress-minikube/)
+  
   - got a working version for minikube [here](https://stackoverflow.com/questions/51751462/nginx-ingress-jenkins-path-rewrite-configuration-not-working)
 - k3s
 - [nginx ingres controller](https://kubernetes.github.io/ingress-nginx/)

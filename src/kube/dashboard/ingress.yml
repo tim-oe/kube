@@ -1,22 +1,42 @@
----
-apiVersion: "networking.k8s.io/v1"
-kind: "Ingress"
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
+  name: kubernetes-dashboard-ingress
+  namespace: kubernetes-dashboard
   annotations:
-    alb.ingress.kubernetes.io/ssl-passthrough: "true"
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
-  name: "dashboard-ingress"
-  namespace: "kubernetes-dashboard"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-ssl-verify: "false"
+    # Add these annotations for backend SSL handling
+    nginx.ingress.kubernetes.io/proxy-ssl-protocols: "TLSv1.2 TLSv1.3"
+    #nginx.ingress.kubernetes.io/configuration-snippet: |
+    #  proxy_ssl_name $proxy_host;
+    #  proxy_ssl_server_name on;
 spec:
-  ingressClassName: "nginx"
+  ingressClassName: nginx
   rules:
-    - host: "dashboard.kube"
-      http:
-        paths:
-          - pathType: "Prefix"
-            path: "/"
-            backend:
-              service:
-                name: "kubernetes-dashboard-kong-proxy"
-                port:
-                  name: http
+  - host: dashboard.kube
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kubernetes-dashboard-kong-proxy
+            port:
+              number: 8443
+  tls:
+  - hosts:
+    - dashboard.kube
+    secretName: dashboard-tls
+# ---
+# Externalizied with kubectl command
+# apiVersion: v1
+# kind: Secret
+# metadata:
+#   name: dashboard-tls
+#   namespace: kubernetes-dashboard
+# type: kubernetes.io/tls
+# data:
+#   tls.crt: <base64 cert>
+#   tls.key: <base64 key>

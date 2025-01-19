@@ -60,71 +60,101 @@ tasks.register('deleteAll') {
 // https://hub.docker.com/_/sonarqube/
 // https://serverfault.com/questions/956361/kubernetes-docker-and-vm-max-map-count
 // https://hub.docker.com/_/postgres/
-// https://www.airplane.dev/blog/deploy-postgres-on-kubernetes
 // https://severalnines.com/blog/using-kubernetes-deploy-postgresql
 // https://docs.vmware.com/en/VMware-SQL-with-Postgres-for-Kubernetes/1.9/tanzu-postgres-k8s/GUID-accessing.html
+// tasks.register('loadSonar') {
+//     description = 'load postgres container to kube'
+//     group = "container"
+//     doLast {
+//         exec {
+//             workingDir '.'
+//             commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sonarqube-namespace.yml'
+//         }
+//         exec {
+//             workingDir '.'
+//             commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/postgresql-volume.yml'
+//         }
+//         exec {
+//             workingDir '.'
+//             commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/postgresql-data-volume.yml'
+//         }
+//         exec {
+//             workingDir '.'
+//             commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/postgresql-service.yml'
+//         }
+//         exec {
+//             workingDir '.'
+//             commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/postgresql-deploy.yml'
+//         }
+//         exec {
+//             workingDir '.'
+//             commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sonarqube-data-volume.yml'
+//         }
+//         exec {
+//             workingDir '.'
+//             commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sonarqube-extensions-volume.yml'
+//         }
+//         exec {
+//             workingDir '.'
+//             commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sonarqube-service.yml'
+//         }
+//         exec {
+//             workingDir '.'
+//             commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sonarqube-deploy.yml'
+//         }
+//         exec {
+//             workingDir '.'
+//             commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sonarqube-ingress.yml'
+//         }
+//     }
+// }
 tasks.register('loadSonar') {
     description = 'load postgres container to kube'
     group = "container"
     doLast {
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sonar-namespace.yml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sonar-namespace.yaml'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/pg-config.yml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/postgres-pvc.yaml'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/pg-volume.yml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/postgres-app.yaml'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/pg-service.yml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sonar-pvc.yaml'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/pg-deploy.yml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sonar-app.yaml'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sq-config.yml'
-        }
-        exec {
-            workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sq-volume.yml'
-        }
-        exec {
-            workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sq-service.yml'
-        }
-        exec {
-            workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sq-deploy.yml'
-        }
-        exec {
-            workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sq-ingress.yml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sonar-ingress.yaml'
         }
     }
 }
 
+
 tasks.register('rmSonar', GradleBuild) {
     description = 'delete postgres kube resources'
     group = "container"
-    startParameter.projectProperties = ['namespace':'sonar']
+    startParameter.projectProperties = ['namespace':'sonarqube']
     tasks = ['deleteAll']
     doLast {
         exec {
             workingDir '.'
             ignoreExitValue true
-            commandLine 'kubectl', 'delete', 'pv',  '-name', 'sonar-pv'
+            commandLine 'kubectl', 'delete', 'pvc',  '-name', 'sonar-pvc', '-n', 'default'
         }
         exec {
             workingDir '.'
             ignoreExitValue true
-            commandLine 'kubectl', 'delete', 'pv',  '-name', 'posgres-pv'
+            commandLine 'kubectl', 'delete', 'pvc',  '-name', 'postgres-pvc', '-n', 'default'
         }
     }
 }
@@ -232,10 +262,21 @@ tasks.register('loadDashboard') {
             commandLine 'bash', '-c',
                     'helm upgrade --install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard --create-namespace --namespace kubernetes-dashboard'
         }
-        // WIP ui comes up but can't login...
+        // working via claude.ai...
         exec {
             workingDir '.'
             commandLine 'kubectl', 'apply', '-f', 'src/kube/dashboard/ingress.yml'
+        }
+        // externalize the tls secret
+        // https://www.warp.dev/terminus/kubectl-create-secret
+        exec {
+            workingDir '.'
+            commandLine 
+                'kubectl','create','secret',
+                '-n','kubernetes-dashboard',
+                'generic','dashboard-tls',
+                '--from-literal','tls.crt=$DASHBOARD_TLS_CERT',
+                '--from-literal','tls.key=$DASHBOARD_TLS_KEY'                        
         }
         // https://github.com/kubernetes/dashboard/blob/master/docs/user/access-control/creating-sample-user.md
         exec {

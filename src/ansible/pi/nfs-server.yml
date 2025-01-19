@@ -40,7 +40,7 @@
         state: "present"
         insertafter: "EOF"
         dest: "{{ config_file }}"
-        marker: "# _NODE_SHARES_"
+        marker: "# {mark} _NODE_SHARES_"
         append_newline: true
         prepend_newline: true
         content:
