@@ -9,9 +9,6 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-ssl-verify: "false"
     # Add these annotations for backend SSL handling
     nginx.ingress.kubernetes.io/proxy-ssl-protocols: "TLSv1.2 TLSv1.3"
-    #nginx.ingress.kubernetes.io/configuration-snippet: |
-    #  proxy_ssl_name $proxy_host;
-    #  proxy_ssl_server_name on;
 spec:
   ingressClassName: nginx
   rules:
@@ -30,6 +27,7 @@ spec:
     - dashboard.kube
     secretName: dashboard-tls
 ---
+# TODO https://kubernetes.io/docs/reference/kubectl/generated/kubectl_create/kubectl_create_secret_tls/
 # needs to run through envsubst
 apiVersion: v1
 kind: Secret

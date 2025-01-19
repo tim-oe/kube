@@ -77,9 +77,8 @@
 ### dashboard
 - [repo](https://github.com/kubernetes/dashboard/tree/master)
 - [doc](https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/)
-- working with kube manifest and ingress via https
-- auth token embedded in nginx proxy/loadbalancer  
-- TODO load via TF
+- working with kube and TF manifests and ingress via https
+- get token embedded in proxy working  
 
 ### jenkins
   - from docker-comose.yml -> KOMPOSE kube manifest -> k2tf terraform manifest

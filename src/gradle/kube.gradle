@@ -272,13 +272,13 @@ tasks.register('loadDashboard') {
         // https://github.com/kubernetes/dashboard/blob/master/docs/user/access-control/creating-sample-user.md
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/kube/dashboard/admin-user.yml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/dashboard/dashboard-admin.yml'
         }
         // dump token
         exec {
             workingDir '.'
             commandLine 'bash', '-c',
-                    'kubectl get secret admin-user -n kubernetes-dashboard -o jsonpath={".data.token"} | base64 -d'
+                    'kubectl get secret dashboard-admin -n kubernetes-dashboard -o jsonpath={".data.token"} | base64 -d'
         }
     }
 }
@@ -290,7 +290,7 @@ tasks.register('dashboadtoken') {
         exec {
             workingDir '.'
             commandLine 'bash', '-c',
-                    'kubectl get secret admin-user -n kubernetes-dashboard -o jsonpath={".data.token"} | base64 -d'
+                    'kubectl get secret dashboard-admin -n kubernetes-dashboard -o jsonpath={".data.token"} | base64 -d'
         }
     }
 }
@@ -300,24 +300,18 @@ tasks.register('rmDashboard', GradleBuild) {
     group = "container"
     startParameter.projectProperties = ['namespace':'kubernetes-dashboard']
     tasks = ['deleteAll']
+    //crb is created globally
     doLast {
         exec {
             workingDir '.'
-            ignoreExitValue true
-            commandLine 'kubectl', 'delete', 'serviceAccounts',
-                    '-n', 'kubernetes-dashboard', 'admin-user'
-        }
-        exec {
-            workingDir '.'
-            ignoreExitValue true
-            commandLine 'kubectl', 'delete', 'ClusterRoleBinding',
-                    '-n', 'kubernetes-dashboard', 'admin-user'
+            commandLine 'kubectl', 'delete', 'clusterrolebinding', 'dashboard-admin' ,'--ignore-not-found=true'
         }
     }
 }
 
 // https://argo-cd.readthedocs.io/en/stable/getting_started/
 // https://blog.differentpla.net/blog/2022/02/02/argocd/
+// TODO need to make some sample app with nexus repo
 tasks.register('loadArgo') {
     description = 'load argcd container to kube'
     group = "container"
@@ -371,12 +365,6 @@ tasks.register('rmArgo', GradleBuild) {
     group = "container"
     startParameter.projectProperties = ['namespace':'argocd']
     tasks = ['deleteAll']
-    //  doFirst {
-    //     exec {
-    //         workingDir '.'
-    //         commandLine 'kubectl', 'delete', '-f', 'https://raw.githubusercontent.com/argoproj/argo-cd/master/manifests/install.yaml'
-    //     }
-    // }
 }
 
 // https://kubernetes.github.io/ingress-nginx/

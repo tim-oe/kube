@@ -8,6 +8,19 @@ provider "helm" {
   }
 }
 
+# Local variables to handle certificate formatting
+# the env vars have the line feeds replaced with \n 
+# need to get value back to what's in the file
+locals {
+  # Replace literal "\n" with actual line feeds
+  formatted_cert = replace(var.tls_certificate, "\\n", "\n")
+  formatted_key  = replace(var.tls_private_key, "\\n", "\n")
+  
+  # Trim any extra whitespace
+  clean_cert = trimspace(local.formatted_cert)
+  clean_key  = trimspace(local.formatted_key)
+}
+
 resource "kubernetes_namespace" "kubernetes_dashboard" {
   metadata {
     name = "kubernetes-dashboard"
@@ -18,36 +31,89 @@ resource "kubernetes_namespace" "kubernetes_dashboard" {
   }
 }
 
-# TODO no worky
 resource "helm_release" "kubernetes_dashboard" {
   name             = "kubernetes-dashboard"
   repository       = "https://kubernetes.github.io/dashboard/"
   chart            = "kubernetes-dashboard"
   namespace        = "kubernetes-dashboard"
-  # no back version other than 3.x
-  # version          = "2.7.0" 
+  create_namespace = true
+  version          = "7.10.0"  # Specify the version you want to use
 
-  depends_on = [kubernetes_namespace.kubernetes_dashboard]
+  values = [
+    yamlencode({
+
+      # RBAC configuration
+      rbac = {
+        create = true
+        clusterRoleBinding = {
+          create = true
+        }
+      }
+
+      # Security settings
+      securityContext = {
+        runAsUser    = 1001
+        runAsGroup   = 2001
+        fsGroup      = 3001
+      }
+
+      # Resource limits
+      resources = {
+        limits = {
+          cpu    = "200m"
+          memory = "256Mi"
+        }
+        requests = {
+          cpu    = "100m"
+          memory = "128Mi"
+        }
+      }
+
+      # Metrics configuration
+      metricsScraper = {
+        enabled = true
+      }
+    })
+  ]
+
+  depends_on = [
+    kubernetes_namespace.kubernetes_dashboard
+  ]
 }
 
-resource "kubernetes_service_account" "admin_user" {
+# https://github.com/kubernetes/dashboard/blob/master/docs/user/access-control/creating-sample-user.md
+resource "kubernetes_service_account" "dashboard_admin" {
   metadata {
-    name      = "admin-user"
+    name      = "dashboard-admin"
     namespace = "kubernetes-dashboard"
   }
 
-  depends_on = [helm_release.kubernetes_dashboard]
+  depends_on = [
+    kubernetes_namespace.kubernetes_dashboard
+  ]
 }
 
-resource "kubernetes_cluster_role_binding" "admin_user_binding" {
+resource "kubernetes_secret" "admin_user" {
   metadata {
-    name = "admin_user_binding"
+    name      = "dashboard-admin"
+    namespace = "kubernetes-dashboard"
+
+    annotations = {
+      "kubernetes.io/service-account.name" = "dashboard-admin"
+    }
   }
 
-  subject {
-    kind      = "ServiceAccount"
-    name      = "admin-user"
-    namespace = "kubernetes-dashboard"
+  type = "kubernetes.io/service-account-token"
+
+  depends_on = [
+    kubernetes_namespace.kubernetes_dashboard
+  ]
+}
+
+
+resource "kubernetes_cluster_role_binding" "dashboard_admin" {
+  metadata {
+    name = "dashboard-admin"
   }
 
   role_ref {
@@ -56,20 +122,78 @@ resource "kubernetes_cluster_role_binding" "admin_user_binding" {
     name      = "cluster-admin"
   }
 
-  depends_on = [kubernetes_service_account.admin_user]
+  subject {
+    kind      = "ServiceAccount"
+    name      = kubernetes_service_account.dashboard_admin.metadata[0].name
+    namespace = "kubernetes-dashboard"
+  }
+
+  depends_on = [
+    kubernetes_namespace.kubernetes_dashboard,
+    kubernetes_service_account.dashboard_admin
+  ]
 }
 
-resource "kubernetes_secret" "admin-user-token" {
-  
+
+resource "kubernetes_ingress_v1" "kubernetes_dashboard_ingress" {
   metadata {
-    name = "admin-user-token"
+    name      = "kubernetes-dashboard-ingress"
     namespace = "kubernetes-dashboard"
 
     annotations = {
-      "kubernetes.io/service-account.name" = "admin-user"
+      "nginx.ingress.kubernetes.io/backend-protocol"    = "HTTPS"
+      "nginx.ingress.kubernetes.io/proxy-ssl-protocols" = "TLSv1.2 TLSv1.3"
+      "nginx.ingress.kubernetes.io/proxy-ssl-verify"    = "false"
+      "nginx.ingress.kubernetes.io/ssl-redirect"        = "true"
     }
   }
 
-  type = "kubernetes.io/service-account-token"
-  depends_on = [kubernetes_service_account.admin_user]
+  spec {
+    ingress_class_name = "nginx"
+
+    tls {
+      hosts       = ["dashboard.kube"]
+      secret_name = "dashboard-tls"
+    }
+
+    rule {
+      host = "dashboard.kube"
+
+      http {
+        path {
+          path      = "/"
+          path_type = "Prefix"
+
+          backend {
+            service {
+              name = "kubernetes-dashboard-kong-proxy"
+
+              port {
+                number = 8443
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  depends_on = [helm_release.kubernetes_dashboard]
+}
+
+resource "kubernetes_secret" "dashboard_tls" {
+  metadata {
+    name      = "dashboard-tls"
+    namespace = "kubernetes-dashboard"
+  }
+
+  data = {
+    "tls.crt" = local.clean_cert
+    "tls.key"  = local.clean_key
+  }
+
+  type = "kubernetes.io/tls"
+
+  depends_on = [
+    kubernetes_ingress_v1.kubernetes_dashboard_ingress
+  ]
 }

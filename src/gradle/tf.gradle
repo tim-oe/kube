@@ -41,6 +41,48 @@ tasks.register('tfApply') {
     }
 }
 
+tasks.register('tfDestroy') {
+    group = "terraform"
+    doLast {
+    }
+    if (project.hasProperty('tf_svc_dir')) {
+        exec {
+            workingDir "${tf_svc_dir}"
+            commandLine 'bash', '-c', 'terraform apply -auto-approve -destroy'
+        }
+    } else {
+        println "need to set -Ptf_svc_dir=[path to directory holding terraform manifest]"
+    }
+}
+
+tasks.register('initDashboard', GradleBuild) {
+    description = 'init dashboard tf service'
+    group = "terraform"
+    startParameter.projectProperties = ['tf_svc_dir':'src/terraform/dashboard']
+    tasks = ['tfInit']
+}
+
+tasks.register('planDashboard', GradleBuild) {
+    description = 'plan dashboard tf service'
+    group = "terraform"
+    startParameter.projectProperties = ['tf_svc_dir':'src/terraform/dashboard']
+    tasks = ['tfPlan']
+}
+
+tasks.register('applyDashboard', GradleBuild) {
+    description = 'apply dashboard tf service'
+    group = "terraform"
+    startParameter.projectProperties = ['tf_svc_dir':'src/terraform/dashboard']
+    tasks = ['tfApply']
+}
+
+tasks.register('destroyDashboard', GradleBuild) {
+    description = 'apply dashboard tf service'
+    group = "terraform"
+    startParameter.projectProperties = ['tf_svc_dir':'src/terraform/dashboard']
+    tasks = ['tfDestroy']
+}
+
 tasks.register('initJenkins', GradleBuild) {
     description = 'init jenkins tf service'
     group = "terraform"
