@@ -29,14 +29,14 @@ spec:
   - hosts:
     - dashboard.kube
     secretName: dashboard-tls
-# ---
-# Externalizied with kubectl command
-# apiVersion: v1
-# kind: Secret
-# metadata:
-#   name: dashboard-tls
-#   namespace: kubernetes-dashboard
-# type: kubernetes.io/tls
-# data:
-#   tls.crt: <base64 cert>
-#   tls.key: <base64 key>
+---
+# needs to run through envsubst
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dashboard-tls
+  namespace: kubernetes-dashboard
+type: kubernetes.io/tls
+data:
+  tls.crt: ${DASHBOARD_TLS_CERT}
+  tls.key: ${DASHBOARD_TLS_KEY}

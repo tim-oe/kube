@@ -263,20 +263,11 @@ tasks.register('loadDashboard') {
                     'helm upgrade --install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard --create-namespace --namespace kubernetes-dashboard'
         }
         // working via claude.ai...
+        // using envar to externalize cert/key
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/kube/dashboard/ingress.yml'
-        }
-        // externalize the tls secret
-        // https://www.warp.dev/terminus/kubectl-create-secret
-        exec {
-            workingDir '.'
-            commandLine 
-                'kubectl','create','secret',
-                '-n','kubernetes-dashboard',
-                'generic','dashboard-tls',
-                '--from-literal','tls.crt=$DASHBOARD_TLS_CERT',
-                '--from-literal','tls.key=$DASHBOARD_TLS_KEY'                        
+            commandLine 'bash', '-c',
+                'envsubst < src/kube/dashboard/ingress.yml | kubectl apply -f -'
         }
         // https://github.com/kubernetes/dashboard/blob/master/docs/user/access-control/creating-sample-user.md
         exec {
