@@ -34,7 +34,7 @@
 - [minikube](https://minikube.sigs.k8s.io/docs/)
   - used for local testing/dev
 - [kompose](https://kubernetes.io/docs/tasks/configure-pod-container/translate-compose-kubernetes/)
-  - translate docker -> kube not always helpfull
+  - not always complete, volumes need to be manually converted
   - see gradle scripts for some useful commands
 - [K3S pi cluster](https://docs.k3s.io/)
   - [releases](https://github.com/k3s-io/k3s/releases)
@@ -42,7 +42,10 @@
     - [more howto](https://www.cncf.io/blog/2020/11/25/upgrade-a-k3s-kubernetes-cluster-with-system-upgrade-controller/)
   - [local-path pv and pvc](https://github.com/rancher/local-path-provisioner)
   - [NFS Volumes](https://www.phillipsj.net/posts/k3s-enable-nfs-storage/)
-
+  - [longhorn](https://longhorn.io/docs/1.7.2/)
+    - [example](https://rpi4cluster.com/k3s-storage-setting/)
+    - [basic auth ui](https://longhorn.io/docs/1.7.2/deploy/accessing-the-ui/longhorn-ingress/)
+     
 ### pv/pvc
 - nfs issues 
   - [k3s](https://github.com/k3s-io/k3s/issues/5165)
@@ -54,6 +57,7 @@
 - get logs ```kubectl logs <podname> -f  -n <namespace>```
 - recycle pod ```kubectl rollout restart deployment <deployment_name> -n <namespace>```
 - check ingress ```kubectl logs -n ingress-nginx deployment/ingress-nginx-controller```
+- get storage classes ```kubectl get storageclass --all-namespaces```
 - create adhok secret ```kubectl create secret generic <name> ...```
   - for help ```kubectl create secret generic --help```
 

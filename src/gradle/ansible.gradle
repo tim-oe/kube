@@ -119,10 +119,19 @@ tasks.register('sysdNetWait', GradleBuild) {
     tasks = ['playbook']
 }
 
-// opnsense CA install
+// opnsense CA root cert install
 tasks.register('cacert', GradleBuild) {
     description = 'run ansible ca cert script'
     group = "ansible"
     startParameter.projectProperties = ['ansible_playbook':'src/ansible/pi/ca-cert.yml']
     tasks = ['playbook']
 }
+
+//add usb drive mounts to nodes
+// not working as is
+// tasks.register('nodeMount', GradleBuild) {
+//     description = 'add usb mounts to kube nodes'
+//     group = "ansible"
+//     startParameter.projectProperties = ['ansible_playbook':'src/ansible/pi/node-storage.yml']
+//     tasks = ['playbook']
+// }

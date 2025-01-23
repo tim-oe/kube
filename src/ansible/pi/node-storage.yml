@@ -1,0 +1,55 @@
+# https://docs.ansible.com/ansible/latest/collections/community/general/filesystem_module.html
+# https://docs.ansible.com/ansible/latest/collections/ansible/posix/mount_module.html
+# https://stackoverflow.com/questions/69947414/ansible-check-if-disk-is-mounted-if-not-format-it
+# https://docs.ansible.com/ansible/latest/collections/community/general/parted_module.html
+# this is still iffy the usb drive kept dropping
+# the drive seems to only work if it is placed in the lower usb port
+---
+- name: "setup usb storage"
+  hosts: "kube_nodes"
+  become: true
+  become_user: "root"
+  vars:
+    blk_dev: "/dev/sda"
+    fs_type: "ext4"
+    folder: "/storage/longhorn"
+  tasks:
+    - name: "Create mount if it does not exist"
+      ansible.builtin.file:
+        path: "{{ folder }}"
+        state: "directory"
+        mode: "0777"
+    - name: Read device information 
+      community.general.parted: "device={{ blk_dev }} unit=MiB"
+      register: sdb_info
+    - name: Remove all existing partitions from disk
+      community.general.parted:
+        number: '{{ item.num }}'
+        state: absent
+      loop: '{{ sdb_info.partitions }}'
+    - name: Create a new ext4 primary partition
+      community.general.parted:
+        device: "{{ blk_dev }}"
+        number: 1
+        state: present
+        fs_type: ext4
+    - name: format usb drive
+      community.general.filesystem:
+        fstype: "{{ fs_type }}"
+        state: present
+        dev: "{{ blk_dev }}1"
+    - name: "Fetch the UUID of {{ blk_dev }}"
+      command: "blkid -s UUID -o value {{ blk_dev }}"
+      changed_when: false
+      register: blk_uuid
+    - name: "Mount {{ blk_dev }} by UUID"
+      ansible.posix.mount:
+        path: "{{ folder }}"
+        src: UUID={{ blk_uuid.stdout }}
+        fstype: "{{ fs_type }}"
+        opts: defaults
+        state: mounted
+    - name: "reload fstab"
+      command: "systemctl daemon-reload"
+    - name: "mount"
+      command: "mount -a"

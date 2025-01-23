@@ -368,7 +368,10 @@ tasks.register('rmArgo', GradleBuild) {
 }
 
 // https://kubernetes.github.io/ingress-nginx/
+// https://github.com/kubernetes/ingress-nginx
 // https://blog.thenets.org/how-to-create-a-k3s-cluster-with-nginx-ingress-controller/
+// TODO convert to helm?
+// https://kubernetes.github.io/ingress-nginx/deploy/
 tasks.register('loadEnginx') {
     description = 'load nginx ingress controller to kube'
     group = "container"
@@ -376,7 +379,7 @@ tasks.register('loadEnginx') {
         exec {
             workingDir '.'
             commandLine 'kubectl', 'apply', '-f',
-                    'https://raw.githubusercontent.com/kubernetes/ingress-nginx/release-1.10/deploy/static/provider/baremetal/deploy.yaml'
+                    "https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-${INGRESS_NGINX_VERSION}/deploy/static/provider/cloud/deploy.yaml"
         }
         // need to add actual load balancer...
         exec {
@@ -474,4 +477,44 @@ tasks.register('rmUpgradeCtlr', GradleBuild) {
             commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-ctlr', 'k3s-upgrade-'
         }
     }
+}
+
+// https://longhorn.io/docs/1.7.2/
+// https://longhorn.io/docs/1.7.2/deploy/install/install-with-kubectl/
+// https://longhorn.io/docs/1.7.2/deploy/upgrade/longhorn-manager/
+tasks.register('loadLonghorn') {
+    description = 'load longhorn storage to kube'
+    group = "container"
+    doLast {
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f',
+                    "https://raw.githubusercontent.com/longhorn/longhorn/${LONGHORN_VERSION}/deploy/longhorn.yaml"
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/longhorn/ingress.yml'
+        }
+    }
+}
+
+tasks.register('cycleLonghorn') {
+    description = 'recycle deployment and daemonset for longhorn storage'
+    group = "container"
+    doLast {
+        exec {
+            workingDir '.'
+            commandLine 'kubectl','rollout','restart','deployment','longhorn-driver-deployer','-n','longhorn-system'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl','rollout','restart','daemonset','longhorn-manager','-n','longhorn-system'        }
+    }
+}
+
+tasks.register('rmLonghorn', GradleBuild) {
+    description = 'remove longhorn storage from kube'
+    group = "container"
+    startParameter.projectProperties = ['namespace':'longhorn-system']
+    tasks = ['deleteAll']
 }

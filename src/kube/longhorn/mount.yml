@@ -1,0 +1,8 @@
+# did not work
+# kubectl patch -n longhorn-system settings default-data-path -p '{"value":"/storage/longhorn"}' --type=merge
+apiVersion: longhorn.io/v1
+kind: Setting
+metadata:
+  name: default-data-path
+  namespace: longhorn-system
+value: "/storage/longhorn"

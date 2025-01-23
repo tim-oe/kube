@@ -35,6 +35,18 @@
         path: "{{ base_dir }}/cluster"
         state: "directory"
         mode: "0777"
+    - name: "Create longhorn directory if it does not exist"
+      ansible.builtin.file:
+        path: "{{ base_dir }}/longhorn"
+        state: "directory"
+        mode: "0777"
+    - name: add storage link
+      ansible.builtin.file:
+        src: /mnt/ssd/longhorn
+        dest: /storage/longhorn
+        owner: root
+        group: root
+        state: link
     - name: "add node shares"
       blockinfile:
         state: "present"
