@@ -9,6 +9,9 @@
   vars:
     cmd_file: "/boot/firmware/cmdline.txt"
     mod_file: "/etc/modules-load.d/longhorn.conf"
+    multiline: |
+          dm_crypt
+          iscsi_tcp
   tasks:
     - name: "Install k3s dependencies"
       ansible.builtin.apt:
@@ -57,7 +60,7 @@
     - name: "longhorn crypt mod dep"
       copy:
         dest: "{{ mod_file }}"
-        content: "dm_crypt"
+        content: "{{ multiline }}"
       register: load_mod
     - name: "Reboot to pickup cmdline changes."
       reboot:

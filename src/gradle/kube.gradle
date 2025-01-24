@@ -482,6 +482,8 @@ tasks.register('rmUpgradeCtlr', GradleBuild) {
 // https://longhorn.io/docs/1.7.2/
 // https://longhorn.io/docs/1.7.2/deploy/install/install-with-kubectl/
 // https://longhorn.io/docs/1.7.2/deploy/upgrade/longhorn-manager/
+// https://longhorn.io/docs/1.8.0/deploy/install/install-with-kubectl/#prerequisites
+// run prereq script
 tasks.register('loadLonghorn') {
     description = 'load longhorn storage to kube'
     group = "container"
@@ -489,7 +491,8 @@ tasks.register('loadLonghorn') {
         exec {
             workingDir '.'
             commandLine 'kubectl', 'apply', '-f',
-                    "https://raw.githubusercontent.com/longhorn/longhorn/${LONGHORN_VERSION}/deploy/longhorn.yaml"
+                    "https://raw.githubusercontent.com/longhorn/longhorn/${LONGHORN_VERSION}/deploy/longhorn.yaml",
+                    '--overwrite=true'
         }
         exec {
             workingDir '.'
@@ -512,9 +515,41 @@ tasks.register('cycleLonghorn') {
     }
 }
 
-tasks.register('rmLonghorn', GradleBuild) {
+// https://longhorn.io/docs/1.7.2/deploy/uninstall/#uninstalling-longhorn-using-kubectl
+// troubleshoot kubectl logs job/longhorn-uninstall -n longhorn-system
+// got to properly shutdown and uninstall resources
+// TODO kubectl -n longhorn-system patch -p '{"value": "true"}' --type=merge lhs deleting-confirmation-flag
+tasks.register('rmLonghorn') {
+    description = 'recycle deployment and daemonset for longhorn storage'
+    group = "container"
+    doLast {
+        // exec {
+        //     workingDir '.'
+        //     commandLine 'kubectl','-n','longhorn-system',
+        //         'patch','-p','\'{"value":"true"}\'','--type=merge','lhs','deleting-confirmation-flag'        
+        // }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl','create','-f',"https://raw.githubusercontent.com/longhorn/longhorn/${LONGHORN_VERSION}/uninstall/uninstall.yaml"
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl','get','job/longhorn-uninstall','-n','longhorn-system','-w'
+        }
+
+    }
+}
+
+// only run after 
+tasks.register('delLonghorn', GradleBuild) {
     description = 'remove longhorn storage from kube'
     group = "container"
     startParameter.projectProperties = ['namespace':'longhorn-system']
     tasks = ['deleteAll']
+    doFirst {
+        exec {
+            workingDir '.'
+            commandLine 'kubectl','delete','-f',"https://raw.githubusercontent.com/longhorn/longhorn/${LONGHORN_VERSION}/uninstall/uninstall.yaml"
+        }
+    }
 }

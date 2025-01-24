@@ -60,8 +60,10 @@
 - get storage classes ```kubectl get storageclass --all-namespaces```
 - create adhok secret ```kubectl create secret generic <name> ...```
   - for help ```kubectl create secret generic --help```
+- change storage class default ```kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"false"}}}'```
+- dump all resources ```kubectl api-resources --verbs=list --namespaced -o name | xargs -t -i kubectl get {} -n=<namespace> --ignore-not-found```
 
-### terraform
+ ### terraform
 - [docs](https://developer.hashicorp.com/terraform?ajs_aid=cbf6f5d7-2a05-47c6-8353-14ea3695c4c4&product_intent=terraform)
 - [structure](https://developer.hashicorp.com/terraform/language/modules/develop/structure)
 - providers
@@ -136,6 +138,7 @@
 - [kube jenkins agents](https://plugins.jenkins.io/kubernetes/)
 - [longhorn](https://github.com/longhorn/longhorn)
   - [ks3 install](https://medium.com/@pongsatt/k3s-kubernetes-cluster-storage-with-longhorn-ff201947d3f5)
+- [support bundle](https://github.com/rancher/support-bundle-kit/tree/master)
 
 ## FAQ
 
