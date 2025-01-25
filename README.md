@@ -36,7 +36,8 @@
   - 256g usb3 flash drive
 
 ## Pi software
-- custom base image build with [SDM](https://github.com/gitbls/sdm)
+- [ubuntu 22.04](https://ubuntu.com/tutorials/how-to-install-ubuntu-on-your-raspberry-pi#1-overview)
+  - with the pi copied sd card then changed host names to replicate
 - additional softward install and configs via [ansible](https://docs.ansible.com/)
  - see [scripts](src/ansible)
 - [rancher k3s](https://docs.k3s.io/installation)
