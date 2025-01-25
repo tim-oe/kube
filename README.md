@@ -33,7 +33,8 @@
 - [kube docs](https://kubernetes.io/docs/home/)
 - [minikube](https://minikube.sigs.k8s.io/docs/)
   - used for local testing/dev
-- [kompose](https://kubernetes.io/docs/tasks/configure-pod-container/translate-compose-kubernetes/)
+- [kompose](https://kompose.io/)
+  - [usage](https://kubernetes.io/docs/tasks/configure-pod-container/translate-compose-kubernetes/)
   - not always complete, volumes need to be manually converted
   - see gradle scripts for some useful commands
 - [K3S pi cluster](https://docs.k3s.io/)

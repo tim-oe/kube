@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f /src/mnt/raid/sonarqube/docker-compose.yml
+    kompose.version: 1.35.0 (9532ceef3)
+  labels:
+    io.kompose.service: db
+  name: db
+  namespace: "sonar"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: db
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f /src/mnt/raid/sonarqube/docker-compose.yml
+        kompose.version: 1.35.0 (9532ceef3)
+      labels:
+        io.kompose.service: db
+    spec:
+      initContainers:
+      # https://stackoverflow.com/questions/62697071/docker-compose-postgres-upgrade-initdb-error-directory-var-lib-postgresql-da
+      - name: init-lf
+        image: busybox
+        command: ['sh', '-c', 'rm -fR /var/lib/postgresql/data/lost+found']
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: postgresql-data
+      containers:
+        - env:
+            - name: POSTGRES_DB
+              value: sonar
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sonarqube-secret
+                  key: DATABASE_PWD
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: sonarqube-secret
+                  key: DATABASE_USER
+          image: postgres:13
+          name: postgresql
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /var/lib/postgresql
+              name: postgresql
+            - mountPath: /var/lib/postgresql/data
+              name: postgresql-data
+      hostname: postgresql
+      restartPolicy: Always
+      volumes:
+        - name: postgresql
+          persistentVolumeClaim:
+            claimName: postgresql
+        - name: postgresql-data
+          persistentVolumeClaim:
+            claimName: postgresql-data

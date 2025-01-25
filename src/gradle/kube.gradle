@@ -62,101 +62,55 @@ tasks.register('deleteAll') {
 // https://hub.docker.com/_/postgres/
 // https://severalnines.com/blog/using-kubernetes-deploy-postgresql
 // https://docs.vmware.com/en/VMware-SQL-with-Postgres-for-Kubernetes/1.9/tanzu-postgres-k8s/GUID-accessing.html
-// tasks.register('loadSonar') {
-//     description = 'load postgres container to kube'
-//     group = "container"
-//     doLast {
-//         exec {
-//             workingDir '.'
-//             commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sonarqube-namespace.yml'
-//         }
-//         exec {
-//             workingDir '.'
-//             commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/postgresql-volume.yml'
-//         }
-//         exec {
-//             workingDir '.'
-//             commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/postgresql-data-volume.yml'
-//         }
-//         exec {
-//             workingDir '.'
-//             commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/postgresql-service.yml'
-//         }
-//         exec {
-//             workingDir '.'
-//             commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/postgresql-deploy.yml'
-//         }
-//         exec {
-//             workingDir '.'
-//             commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sonarqube-data-volume.yml'
-//         }
-//         exec {
-//             workingDir '.'
-//             commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sonarqube-extensions-volume.yml'
-//         }
-//         exec {
-//             workingDir '.'
-//             commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sonarqube-service.yml'
-//         }
-//         exec {
-//             workingDir '.'
-//             commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sonarqube-deploy.yml'
-//         }
-//         exec {
-//             workingDir '.'
-//             commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sonarqube-ingress.yml'
-//         }
-//     }
-// }
 tasks.register('loadSonar') {
-    description = 'load postgres container to kube'
+    description = 'load sonarqube container to kube'
     group = "container"
     doLast {
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sonar-namespace.yaml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/namespace.yml'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/postgres-pvc.yaml'
+            commandLine 'bash', '-c',
+                'envsubst < src/kube/sonar/sonarqube-secret.yml | kubectl apply -f -'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/postgres-app.yaml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/postgresql-persistentvolumeclaim.yml'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sonar-pvc.yaml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/db-deployment.yml'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sonar-app.yaml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/db-service.yml'
         }
         exec {
             workingDir '.'
-            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sonar-ingress.yaml'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sonarqube-persistentvolumeclaim.yml'        
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sonarqube-service.yml'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sonarqube-deployment.yml'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'apply', '-f', 'src/kube/sonar/sonarqube-ingress.yml'
         }
     }
 }
 
-
 tasks.register('rmSonar', GradleBuild) {
     description = 'delete postgres kube resources'
     group = "container"
-    startParameter.projectProperties = ['namespace':'sonarqube']
+    startParameter.projectProperties = ['namespace':'sonar']
     tasks = ['deleteAll']
-    doLast {
-        exec {
-            workingDir '.'
-            ignoreExitValue true
-            commandLine 'kubectl', 'delete', 'pvc',  '-name', 'sonar-pvc', '-n', 'default'
-        }
-        exec {
-            workingDir '.'
-            ignoreExitValue true
-            commandLine 'kubectl', 'delete', 'pvc',  '-name', 'postgres-pvc', '-n', 'default'
-        }
-    }
 }
 
 // https://www.jenkins.io/doc/book/installing/kubernetes/
@@ -482,6 +436,7 @@ tasks.register('rmUpgradeCtlr', GradleBuild) {
 // https://longhorn.io/docs/1.7.2/
 // https://longhorn.io/docs/1.7.2/deploy/install/install-with-kubectl/
 // https://longhorn.io/docs/1.7.2/deploy/upgrade/longhorn-manager/
+// TODO https://longhorn.io/docs/1.8.0/advanced-resources/deploy/customizing-default-settings/#using-the-longhorn-deployment-yaml-file
 // https://longhorn.io/docs/1.8.0/deploy/install/install-with-kubectl/#prerequisites
 // run prereq script
 tasks.register('loadLonghorn') {

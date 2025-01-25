@@ -10,13 +10,13 @@ metadata:
 spec:
   ingressClassName: "nginx"
   rules:
-    - host: "sonar.tec.net"
+    - host: "sonar.kube"
       http:
         paths:
           - pathType: "Prefix"
             path: "/"
             backend:
               service:
-                name: "sonar"
+                name: "sonarqube"
                 port:
                   number: 9000
