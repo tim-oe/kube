@@ -1,0 +1,16 @@
+## externalized values sensitive for deployment
+# in order to prevent redundent values leverage both for kubectl and terraform
+# https://developer.hashicorp.com/terraform/cli/config/environment-variables
+# variable value injection for kubectl using envsubst
+# https://www.baeldung.com/linux/envsubst-command
+# command: envsubst < [path to kube yaml file] | kubectl apply -f -
+# variable token: ${<full var name>}
+
+## kube dashboard
+TF_VAR_TLS_CERTIFICATE=<base64 encoded pem file content>
+TF_VAR_TLS_PRIVATE_KEY=<base64 encoded pem file content>
+
+## kube sonar
+TF_VAR_SONAR_DB_USER=<username>
+TF_VAR_SONAR_DB_PWD=<pwd>
+

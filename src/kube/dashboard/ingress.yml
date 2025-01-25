@@ -29,6 +29,7 @@ spec:
 ---
 # TODO https://kubernetes.io/docs/reference/kubectl/generated/kubectl_create/kubectl_create_secret_tls/
 # needs to run through envsubst
+# to reduce redundency leverate TF variable naming 
 apiVersion: v1
 kind: Secret
 metadata:
@@ -36,5 +37,5 @@ metadata:
   namespace: kubernetes-dashboard
 type: kubernetes.io/tls
 data:
-  tls.crt: ${DASHBOARD_TLS_CERT}
-  tls.key: ${DASHBOARD_TLS_KEY}
+  tls.crt: ${TF_VAR_TLS_CERTIFICATE}
+  tls.key: ${TF_VAR_TLS_PRIVATE_KEY}

@@ -9,12 +9,12 @@ provider "helm" {
 }
 
 # Local variables to handle certificate formatting
-# the env vars have the line feeds replaced with \n 
+# value is base64 encoded 
 # need to get value back to what's in the file
 locals {
-  # Replace literal "\n" with actual line feeds
-  formatted_cert = replace(var.tls_certificate, "\\n", "\n")
-  formatted_key  = replace(var.tls_private_key, "\\n", "\n")
+  # variable value portable with kube and TF
+  formatted_cert = base64decode(var.TLS_CERTIFICATE)
+  formatted_key = base64decode(var.TLS_PRIVATE_KEY)
   
   # Trim any extra whitespace
   clean_cert = trimspace(local.formatted_cert)
