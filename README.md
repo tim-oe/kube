@@ -3,7 +3,6 @@
 ![initial version raspberry pi cluster](docs/img/pi-kube.jpg?raw=true)
 
 ## goals
-
 - Create a home managable kubernetes cluster beyond mimkube.
 - automate system configuration
 - become familiur with different deployment mechanisms
@@ -38,19 +37,18 @@
 ## Pi software
 - [ubuntu 22.04](https://ubuntu.com/tutorials/how-to-install-ubuntu-on-your-raspberry-pi#1-overview)
   - with the pi copied sd card then changed host names to replicate
-- additional softward install and configs via [ansible](https://docs.ansible.com/)
- - see [scripts](src/ansible)
+- additional software install and configs via [ansible](https://docs.ansible.com/)
+  - see [scripts](src/ansible)
 - [rancher k3s](https://docs.k3s.io/installation)
   - [system upgrade controller](https://github.com/rancher/system-upgrade-controller)
 - [nginx controller](https://kubernetes.github.io/ingress-nginx/deploy/#bare-metal-clusters)
 - [nfs storage](https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner/blob/master/charts/nfs-subdir-external-provisioner/README.md)
 - [longhorn](https://longhorn.io/docs/1.8.0/deploy/install/install-with-kubectl/)
-- controller
+- controller instance
   - nfs storage
   - nginx as cluster loadbalancer
 
 ## deployed services
-
 services converted from docker compose -> kubectl -> terraform
 - seed kube manifasts with [kompose](https://kompose.io/)
   - need to create PVC manifests
@@ -60,6 +58,7 @@ services converted from docker compose -> kubectl -> terraform
 - made enviroment variables portable to be used for both deployents  
 - used gradle task wrappers for deployments
   - see [scripts](src/gradle)
+- you'll need a dns server to map ingress hostnames
 
 ### dashboard
 - [repo](https://github.com/kubernetes/dashboard/tree/master)
@@ -85,14 +84,13 @@ services converted from docker compose -> kubectl -> terraform
 - [doc](https://docs.sonarsource.com/sonarqube-server/9.6/setup-and-upgrade/deploy-on-kubernetes/deploy-sonarqube-on-kubernetes/)
   - did not get official install/helm working
   - only working postgres with longhorn storage
-  - addtional work arounds within deployments
+  - addtional workarounds within deployment manifests
 - deployments
   - [kubectl](src/kube/sonar)
   - [terraform](src/terraform/sonar)
 - [nginx](src/conf/etc/nginx/sites-available/sonar.conf)
 
 ## cloud storage (wip)
-
 - [ebs volume](https://angelmarybabu.github.io/posts/How-to-create-Persistent-Volume-in-EKS/)
 - [eks storage](https://repost.aws/knowledge-center/eks-persistent-storage)
 
@@ -107,7 +105,7 @@ services converted from docker compose -> kubectl -> terraform
 - dump all resources ```kubectl api-resources --verbs=list --namespaced -o name | xargs -t -i kubectl get {} -n=<namespace> --ignore-not-found```
 
 ## TODOs
-
+- [basic auth for longhorn ui](https://longhorn.io/docs/1.7.2/deploy/accessing-the-ui/longhorn-ingress/)
 - need to init intial image ansible user/ssh/hostname
   - [cloud-init](https://help.ubuntu.com/community/CloudInit) to bridge imaging and ansible
 - deploy to [GKE](https://cloud.google.com/kubernetes-engine/)
@@ -119,7 +117,6 @@ services converted from docker compose -> kubectl -> terraform
   - [thinkcentre 920q](https://www.lenovo.com/us/en/p/desktops/thinkcentre/m-series-tiny/thinkcentre-m920q/11tc1mtm92q?orgRef=https%253A%252F%252Fwww.google.com%252F&srsltid=AfmBOoqfJde58W9ybDoj4Xi2nrvFXK8io-XDBNUJ8xnuuy4uRPzBqb2-)
 
 ## helpfull links found along the way
-
 - [unbounded volume](https://stackoverflow.com/questions/60774220/kubernetes-pod-has-unbound-immediate-persistentvolumeclaims)
 - [pvc creation excededs timeout](https://github.com/hashicorp/terraform-provider-kubernetes/issues/1349)
 - [node labeling](https://linuxhandbook.com/kubectl-label-node/)
@@ -129,10 +126,6 @@ services converted from docker compose -> kubectl -> terraform
 - [kube docs](https://kubernetes.io/docs/home/)
 - [minikube](https://minikube.sigs.k8s.io/docs/)
   - used for local testing/dev
-- [kompose](https://kompose.io/)
-  - [usage](https://kubernetes.io/docs/tasks/configure-pod-container/translate-compose-kubernetes/)
-  - not always complete, volumes need to be manually converted
-  - see gradle scripts for some useful commands
 - [K3S pi cluster](https://docs.k3s.io/)
   - [releases](https://github.com/k3s-io/k3s/releases)
     - [more howto](https://www.cncf.io/blog/2020/11/25/upgrade-a-k3s-kubernetes-cluster-with-system-upgrade-controller/)
@@ -140,7 +133,6 @@ services converted from docker compose -> kubectl -> terraform
   - [NFS Volumes](https://www.phillipsj.net/posts/k3s-enable-nfs-storage/)
   - [longhorn](https://longhorn.io/docs/1.7.2/)
     - [example](https://rpi4cluster.com/k3s-storage-setting/)
-    - [basic auth ui](https://longhorn.io/docs/1.7.2/deploy/accessing-the-ui/longhorn-ingress/)
 - longhorn distributive [fs](https://gdha.github.io/pi-stories/pi-stories9/)
   - [for rancher k3s](https://github.com/sleighzy/raspberry-pi-k3s-homelab/blob/main/rancher-longhorn-storage.md)
   - [rpi cluster block storage](https://rpi4cluster.com/k3s-storage-setting/)
