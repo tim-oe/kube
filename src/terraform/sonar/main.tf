@@ -1,3 +1,4 @@
+
 provider "kubernetes" {
   config_path = "~/.kube/config"
 }
@@ -12,294 +13,121 @@ resource "kubernetes_namespace" "sonar" {
   }
 }
 
-##########################
-# Posgresql 
-##########################
-resource "kubernetes_config_map" "postgres_config" {
+resource "kubernetes_secret" "sonarqube_secret" {
   metadata {
-    name      = "postgres-config"
+    name      = "sonarqube-secret"
     namespace = "sonar"
-
-    labels = {
-      app = "postgres"
-    }
   }
 
-  # TODO vault
   data = {
-    POSTGRES_DB = "sonar_db"
-    POSTGRES_PASSWORD = "S0N4RQUB3"
-    POSTGRES_USER = "sonar_user"
+    DATABASE_PWD  = var.SONAR_DB_PWD
+    DATABASE_USER = var.SONAR_DB_USER
   }
-  depends_on = [kubernetes_namespace.sonar]
+
+  type = "Opaque"
+
+  depends_on = [
+    kubernetes_namespace.sonar
+  ]
 }
 
-# pv is global...
-# resource "kubernetes_persistent_volume" "postgres_pv" {
-#   metadata {
-#     name = "postgres-pv"
-
-#     labels = {
-#       type = "local"
-#     }
-#   }
-
-#   spec {
-#     capacity = {
-#       storage = "2Gi"
-#     }
-#     access_modes = ["ReadWriteOnce"]
-#     storage_class_name = "local-path"
-#     persistent_volume_source {
-#       local  {
-#       }
-#     }
-#     node_affinity {
-#       required {
-#         node_selector_term {
-#           match_expressions {
-#             key      = "kubernetes.io/hostname"
-#             operator = "In"
-#             values   = ["tec-kube-n1", "tec-kube-n2", "tec-kube-n3"]
-#           }
-#         }
-#       }
-#     }
-#   }
-#   depends_on = [kubernetes_namespace.sonar]
-# }
-
-resource "kubernetes_persistent_volume_claim" "postgres_pvc" {
+resource "kubernetes_persistent_volume_claim" "postgresql" {
   metadata {
-    name      = "postgres-pvc"
+    name      = "postgresql"
     namespace = "sonar"
 
     labels = {
-      app = "postgres"
+      "io.kompose.service" = "postgresql"
     }
   }
 
   spec {
     access_modes = ["ReadWriteOnce"]
-    storage_class_name = "local-path"
-    # volume_name = "postgres-pv"
-    
+
     resources {
       requests = {
-        storage = "1Gi"
+        storage = "4Gi"
       }
     }
+
+    storage_class_name = "longhorn"
   }
 
-  wait_until_bound = false
-  depends_on = [kubernetes_namespace.sonar]
-  # depends_on = [kubernetes_persistent_volume.postgres_pv]
+  depends_on = [
+    kubernetes_namespace.sonar
+  ]
 }
 
-resource "kubernetes_deployment" "postgres" {
+resource "kubernetes_persistent_volume_claim" "postgresql_data" {
   metadata {
-    name      = "postgres"
-    namespace = "sonar"
-  }
-
-  spec {
-    replicas = 1
-
-    selector {
-      match_labels = {
-        app = "postgres"
-      }
-    }
-
-    template {
-      metadata {
-        labels = {
-          app = "postgres"
-        }
-      }
-
-      spec {
-        volume {
-          name = "postgredb"
-
-          persistent_volume_claim {
-            claim_name = "postgres-pvc"
-          }
-        }
-
-        container {
-          name  = "postgres"
-          image = "postgres:15.4"
-
-          port {
-            container_port = 5432
-          }
-
-          env_from {
-            config_map_ref {
-              name = "postgres-config"
-            }
-          }
-
-          resources {
-            limits = {
-              cpu = "1"
-
-              memory = "2Gi"
-            }
-
-            requests = {
-              cpu = "1"
-
-              memory = "512Mi"
-            }
-          }
-
-          volume_mount {
-            name       = "postgredb"
-            mount_path = "/var/lib/postgresql/data"
-          }
-
-          image_pull_policy = "IfNotPresent"
-        }
-
-        node_selector = {
-          "kubernetes.io/os" = "linux"
-        }
-
-        affinity {
-          node_affinity {
-            required_during_scheduling_ignored_during_execution {
-              node_selector_term {
-                match_expressions {
-                  key      = "kubernetes.io/arch"
-                  operator = "In"
-                  values   = ["amd64", "arm64"]
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  depends_on = [kubernetes_persistent_volume_claim.postgres_pvc]
-}
-
-resource "kubernetes_service" "postgres" {
-  metadata {
-    name      = "postgres"
+    name      = "postgresql-data"
     namespace = "sonar"
 
     labels = {
-      app = "postgres"
+      "io.kompose.service" = "postgresql-data"
+    }
+  }
+
+  spec {
+    access_modes = ["ReadWriteOnce"]
+
+    resources {
+      requests = {
+        storage = "16Gi"
+      }
+    }
+
+    storage_class_name = "longhorn"
+  }
+
+  depends_on = [
+    kubernetes_namespace.sonar
+  ]
+}
+
+resource "kubernetes_service" "db" {
+  metadata {
+    name      = "db"
+    namespace = "sonar"
+
+    labels = {
+      "io.kompose.service" = "db"
+    }
+
+    annotations = {
+      "kompose.cmd"     = "kompose convert -f /src/mnt/raid/sonarqube/docker-compose.yml"
+      "kompose.version" = "1.35.0 (9532ceef3)"
     }
   }
 
   spec {
     port {
-      port      = 5432
-      node_port = 31032
+      name        = "5432"
+      port        = 5432
+      target_port = "5432"
     }
 
     selector = {
-      app = "postgres"
+      "io.kompose.service" = "db"
     }
-
-    type = "NodePort"
   }
-
-  depends_on = [kubernetes_deployment.postgres]
+  depends_on = [
+    kubernetes_namespace.sonar
+  ]
 }
 
-##########################
-# SonarQube 
-##########################
-resource "kubernetes_config_map" "sonar_config" {
+resource "kubernetes_deployment" "db" {
   metadata {
-    name      = "sonar-config"
+    name      = "db"
     namespace = "sonar"
 
     labels = {
-      app = "sonar"
+      "io.kompose.service" = "db"
     }
-  }
 
-  data = {
-    JAVA_OPTS = "-Duser.timezone=America/Chicago -Xmx2048m"
-    SONARQUBE_JDBC_PASSWORD = "S0N4RQUB3"
-    SONARQUBE_JDBC_URL = "jdbc:postgresql://postgres:5432/sonar_db"
-    SONARQUBE_JDBC_USERNAME = "sonar_user"
-  }
-  depends_on = [kubernetes_namespace.sonar]
-}
-
-# no namespace on pv?
-# resource "kubernetes_persistent_volume" "sonar_pv" {
-  
-#   metadata {
-#     name = "sonar-pv"
-
-#     labels = {
-#       type = "local"
-#     }
-#   }
-
-#   spec {
-#     capacity = {
-#       storage = "2Gi"
-#     }
-#     access_modes = ["ReadWriteOnce"]
-#     storage_class_name = "local-path"
-#     persistent_volume_source {
-#       local  {
-#       }
-#     }
-#     node_affinity {
-#       required {
-#         node_selector_term {
-#           match_expressions {
-#             key      = "kubernetes.io/hostname"
-#             operator = "In"
-#             values   = ["tec-kube-n1", "tec-kube-n2", "tec-kube-n3"]
-#           }
-#         }
-#       }
-#     }
-#   }
-#   depends_on = [kubernetes_config_map.sonar_config]
-# }
-
-resource "kubernetes_persistent_volume_claim" "sonar_pvc" {
-  metadata {
-    name      = "sonar-pvc"
-    namespace = "sonar"
-  }
-
-  spec {
-    access_modes = ["ReadWriteOnce"]
-    storage_class_name = "local-path"
-    # volume_name = "sonar-pv"
-    
-    resources {
-      requests = {
-        storage = "1Gi"
-      }
-    }
-  }
-
-  wait_until_bound = false
-  # depends_on = [kubernetes_persistent_volume.sonar_pv]
-  depends_on = [kubernetes_config_map.sonar_config]
-}
-
-resource "kubernetes_deployment" "sonar" {
-  metadata {
-    name      = "sonar"
-    namespace = "sonar"
-
-    labels = {
-      app = "sonar"
+    annotations = {
+      "kompose.cmd"     = "kompose convert -f /src/mnt/raid/sonarqube/docker-compose.yml"
+      "kompose.version" = "1.35.0 (9532ceef3)"
     }
   }
 
@@ -308,28 +136,285 @@ resource "kubernetes_deployment" "sonar" {
 
     selector {
       match_labels = {
-        app = "sonar"
+        "io.kompose.service" = "db"
       }
     }
 
     template {
       metadata {
         labels = {
-          app = "sonar"
+          "io.kompose.service" = "db"
+        }
+
+        annotations = {
+          "kompose.cmd"     = "kompose convert -f /src/mnt/raid/sonarqube/docker-compose.yml"
+          "kompose.version" = "1.35.0 (9532ceef3)"
         }
       }
 
       spec {
         volume {
-          name = "app-pvc"
+          name = "postgresql"
 
           persistent_volume_claim {
-            claim_name = "sonar-pvc"
+            claim_name = "postgresql"
+          }
+        }
+
+        volume {
+          name = "postgresql-data"
+
+          persistent_volume_claim {
+            claim_name = "postgresql-data"
           }
         }
 
         init_container {
-          name              = "init"
+          name    = "init-lf"
+          image   = "busybox"
+          command = ["sh", "-c", "rm -fR /var/lib/postgresql/data/lost+found"]
+
+          volume_mount {
+            name       = "postgresql-data"
+            mount_path = "/var/lib/postgresql/data"
+          }
+        }
+
+        container {
+          name  = "postgresql"
+          image = "postgres:13"
+
+          port {
+            container_port = 5432
+            protocol       = "TCP"
+          }
+
+          env {
+            name  = "POSTGRES_DB"
+            value = "sonar"
+          }
+
+          env {
+            name = "POSTGRES_PASSWORD"
+
+            value_from {
+              secret_key_ref {
+                name = "sonarqube-secret"
+                key  = "DATABASE_PWD"
+              }
+            }
+          }
+
+          env {
+            name = "POSTGRES_USER"
+
+            value_from {
+              secret_key_ref {
+                name = "sonarqube-secret"
+                key  = "DATABASE_USER"
+              }
+            }
+          }
+
+          volume_mount {
+            name       = "postgresql"
+            mount_path = "/var/lib/postgresql"
+          }
+
+          volume_mount {
+            name       = "postgresql-data"
+            mount_path = "/var/lib/postgresql/data"
+          }
+        }
+
+        restart_policy = "Always"
+        hostname       = "postgresql"
+      }
+    }
+
+    strategy {
+      type = "Recreate"
+    }
+  }
+
+  depends_on = [
+    kubernetes_namespace.sonar,
+    kubernetes_service.db,
+    kubernetes_persistent_volume_claim.postgresql,    
+    kubernetes_persistent_volume_claim.postgresql_data
+  ]
+}
+
+resource "kubernetes_persistent_volume_claim" "sonarqube_data" {
+  metadata {
+    name      = "sonarqube-data"
+    namespace = "sonar"
+
+    labels = {
+      "io.kompose.service" = "sonarqube-data"
+    }
+  }
+
+  spec {
+    access_modes = ["ReadWriteOnce"]
+
+    resources {
+      requests = {
+        storage = "8Gi"
+      }
+    }
+  }
+
+  depends_on = [
+    kubernetes_namespace.sonar
+  ]
+}
+
+resource "kubernetes_persistent_volume_claim" "sonarqube_extensions" {
+  metadata {
+    name      = "sonarqube-extensions"
+    namespace = "sonar"
+
+    labels = {
+      "io.kompose.service" = "sonarqube-extensions"
+    }
+  }
+
+  spec {
+    access_modes = ["ReadWriteOnce"]
+
+    resources {
+      requests = {
+        storage = "4Gi"
+      }
+    }
+  }
+
+  depends_on = [
+    kubernetes_namespace.sonar
+  ]
+}
+
+resource "kubernetes_persistent_volume_claim" "sonarqube_logs" {
+  metadata {
+    name      = "sonarqube-logs"
+    namespace = "sonar"
+
+    labels = {
+      "io.kompose.service" = "sonarqube-logs"
+    }
+  }
+
+  spec {
+    access_modes = ["ReadWriteOnce"]
+
+    resources {
+      requests = {
+        storage = "128Mi"
+      }
+    }
+  }
+
+  depends_on = [
+    kubernetes_namespace.sonar
+  ]
+}
+
+resource "kubernetes_service" "sonarqube" {
+  metadata {
+    name      = "sonarqube"
+    namespace = "sonar"
+
+    labels = {
+      "io.kompose.service" = "sonarqube"
+    }
+
+    annotations = {
+      "kompose.cmd"     = "kompose convert -f /src/mnt/raid/sonarqube/docker-compose.yml"
+      "kompose.version" = "1.35.0 (9532ceef3)"
+    }
+  }
+
+  spec {
+    port {
+      name        = "9000"
+      port        = 9000
+      target_port = "9000"
+    }
+
+    selector = {
+      "io.kompose.service" = "sonarqube"
+    }
+  }
+
+  depends_on = [
+    kubernetes_namespace.sonar
+  ]
+}
+
+resource "kubernetes_deployment" "sonarqube" {
+  metadata {
+    name      = "sonarqube"
+    namespace = "sonar"
+
+    labels = {
+      "io.kompose.service" = "sonarqube"
+    }
+
+    annotations = {
+      "kompose.cmd"     = "kompose convert -f /src/mnt/raid/sonarqube/docker-compose.yml"
+      "kompose.version" = "1.35.0 (9532ceef3)"
+    }
+  }
+
+  spec {
+    replicas = 1
+
+    selector {
+      match_labels = {
+        "io.kompose.service" = "sonarqube"
+      }
+    }
+
+    template {
+      metadata {
+        labels = {
+          "io.kompose.service" = "sonarqube"
+        }
+
+        annotations = {
+          "kompose.cmd"     = "kompose convert -f /src/mnt/raid/sonarqube/docker-compose.yml"
+          "kompose.version" = "1.35.0 (9532ceef3)"
+        }
+      }
+
+      spec {
+        volume {
+          name = "sonarqube-data"
+
+          persistent_volume_claim {
+            claim_name = "sonarqube-data"
+          }
+        }
+
+        volume {
+          name = "sonarqube-extensions"
+
+          persistent_volume_claim {
+            claim_name = "sonarqube-extensions"
+          }
+        }
+
+        volume {
+          name = "sonarqube-logs"
+
+          persistent_volume_claim {
+            claim_name = "sonarqube-logs"
+          }
+        }
+
+        init_container {
+          name              = "init-max-map"
           image             = "busybox"
           command           = ["sysctl", "-w", "vm.max_map_count=262144"]
           image_pull_policy = "IfNotPresent"
@@ -339,64 +424,109 @@ resource "kubernetes_deployment" "sonar" {
           }
         }
 
+        init_container {
+          name              = "init-file-max"
+          image             = "busybox"
+          command           = ["sysctl", "-w", "fs.file-max=131072"]
+          image_pull_policy = "IfNotPresent"
+
+          security_context {
+            privileged = true
+          }
+        }
+
+        init_container {
+          name    = "init-perms"
+          image   = "busybox"
+          command = ["sh", "-c", "chown -R 1000:1000 /opt/sonarqube"]
+
+          volume_mount {
+            name       = "sonarqube-data"
+            mount_path = "/opt/sonarqube/data"
+          }
+
+          volume_mount {
+            name       = "sonarqube-extensions"
+            mount_path = "/opt/sonarqube/extensions"
+          }
+
+          volume_mount {
+            name       = "sonarqube-logs"
+            mount_path = "/opt/sonarqube/logs"
+          }
+        }
+
         container {
           name  = "sonarqube"
-          image = "sonarqube:10.2-community"
+          image = "sonarqube:lts-community"
 
           port {
             container_port = 9000
+            protocol       = "TCP"
           }
 
-          env_from {
-            config_map_ref {
-              name = "sonar-config"
+          env {
+            name  = "SONAR_JDBC_URL"
+            value = "jdbc:postgresql://db:5432/sonar"
+          }
+
+          env {
+            name = "SONAR_JDBC_PASSWORD"
+
+            value_from {
+              secret_key_ref {
+                name = "sonarqube-secret"
+                key  = "DATABASE_PWD"
+              }
+            }
+          }
+
+          env {
+            name = "SONAR_JDBC_USERNAME"
+
+            value_from {
+              secret_key_ref {
+                name = "sonarqube-secret"
+                key  = "DATABASE_USER"
+              }
             }
           }
 
           resources {
             limits = {
-              cpu = "1"
-
-              memory = "2Gi"
+              cpu    = "500m"
+              memory = "4Gi"
             }
 
             requests = {
-              memory = "1Gi"
+              cpu    = "250m"
+              memory = "2Gi"
             }
           }
 
           volume_mount {
-            name       = "app-pvc"
-            mount_path = "/opt/sonarqube/data/"
-            sub_path   = "data"
+            name       = "sonarqube-data"
+            mount_path = "/opt/sonarqube/data"
           }
 
           volume_mount {
-            name       = "app-pvc"
-            mount_path = "/opt/sonarqube/extensions/"
-            sub_path   = "extensions"
+            name       = "sonarqube-extensions"
+            mount_path = "/opt/sonarqube/extensions"
           }
 
-          image_pull_policy = "IfNotPresent"
-        }
+          volume_mount {
+            name       = "sonarqube-logs"
+            mount_path = "/opt/sonarqube/logs"
+          }
 
-        node_selector = {
-          "kubernetes.io/os" = "linux"
-        }
-
-        affinity {
-          node_affinity {
-            required_during_scheduling_ignored_during_execution {
-              node_selector_term {
-                match_expressions {
-                  key      = "kubernetes.io/arch"
-                  operator = "In"
-                  values   = ["amd64", "arm64"]
-                }
-              }
-            }
+          security_context {
+            run_as_user  = 1000
+            run_as_group = 1000
           }
         }
+
+        restart_policy = "Always"
+        hostname       = "sonarqube"
       }
     }
 
@@ -404,35 +534,13 @@ resource "kubernetes_deployment" "sonar" {
       type = "Recreate"
     }
   }
-
-  depends_on = [kubernetes_deployment.postgres]
-}
-
-resource "kubernetes_service" "sonar" {
-  metadata {
-    name      = "sonar"
-    namespace = "sonar"
-
-    labels = {
-      app = "sonar"
-    }
-  }
-
-  spec {
-    port {
-      name      = "sonar"
-      port      = 9000
-      node_port = 31900
-    }
-
-    selector = {
-      app = "sonar"
-    }
-
-    type = "NodePort"
-  }
-
-  depends_on = [kubernetes_deployment.sonar]
+  depends_on = [
+    kubernetes_deployment.db,
+    kubernetes_service.sonarqube,
+    kubernetes_persistent_volume_claim.sonarqube_data,    
+    kubernetes_persistent_volume_claim.sonarqube_logs,    
+    kubernetes_persistent_volume_claim.sonarqube_extensions
+  ]
 }
 
 resource "kubernetes_ingress_v1" "sonar_ingress" {
@@ -442,7 +550,6 @@ resource "kubernetes_ingress_v1" "sonar_ingress" {
 
     annotations = {
       "nginx.ingress.kubernetes.io/add-base-url" = "true"
-
       "nginx.ingress.kubernetes.io/ssl-redirect" = "false"
     }
   }
@@ -451,7 +558,7 @@ resource "kubernetes_ingress_v1" "sonar_ingress" {
     ingress_class_name = "nginx"
 
     rule {
-      host = "sonar.tec.net"
+      host = "sonar.kube"
 
       http {
         path {
@@ -460,7 +567,7 @@ resource "kubernetes_ingress_v1" "sonar_ingress" {
 
           backend {
             service {
-              name = "sonar"
+              name = "sonarqube"
 
               port {
                 number = 9000
@@ -472,6 +579,7 @@ resource "kubernetes_ingress_v1" "sonar_ingress" {
     }
   }
 
-  depends_on = [kubernetes_service.sonar]
+  depends_on = [
+    kubernetes_deployment.sonarqube
+  ]
 }
-

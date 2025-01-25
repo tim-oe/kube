@@ -1,3 +1,4 @@
+# https://console.cloud.google.com/artifacts/docker/kubernetes-e2e-test-images/us/gcr.io/dnsutils?inv=1&invt=Abn0Pg
 provider "kubernetes" {
   config_path = "~/.kube/config"
 }
@@ -34,4 +35,3 @@ resource "kubernetes_pod" "dnsutils" {
     restart_policy = "Always"
   }
 }
-

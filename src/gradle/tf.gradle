@@ -103,3 +103,31 @@ tasks.register('applyJenkins', GradleBuild) {
     startParameter.projectProperties = ['tf_svc_dir':'src/terraform/jenkins']
     tasks = ['tfApply']
 }
+
+tasks.register('initSonar', GradleBuild) {
+    description = 'init sonar tf service'
+    group = "terraform"
+    startParameter.projectProperties = ['tf_svc_dir':'src/terraform/sonar']
+    tasks = ['tfInit']
+}
+
+tasks.register('planSonar', GradleBuild) {
+    description = 'plan sonar tf service'
+    group = "terraform"
+    startParameter.projectProperties = ['tf_svc_dir':'src/terraform/sonar']
+    tasks = ['tfPlan']
+}
+
+tasks.register('applySonar', GradleBuild) {
+    description = 'apply sonar tf service'
+    group = "terraform"
+    startParameter.projectProperties = ['tf_svc_dir':'src/terraform/sonar']
+    tasks = ['tfApply']
+}
+
+tasks.register('destroySonar', GradleBuild) {
+    description = 'apply sonar tf service'
+    group = "terraform"
+    startParameter.projectProperties = ['tf_svc_dir':'src/terraform/sonar']
+    tasks = ['tfDestroy']
+}
