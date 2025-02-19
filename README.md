@@ -106,8 +106,14 @@ services converted from docker compose -> kubectl -> terraform
 
 ## TODOs
 - [basic auth for longhorn ui](https://longhorn.io/docs/1.7.2/deploy/accessing-the-ui/longhorn-ingress/)
-- need to init intial image ansible user/ssh/hostname
-  - [cloud-init](https://help.ubuntu.com/community/CloudInit) to bridge imaging and ansible
+- [k3s ui](https://dev.to/lucyllewy/installing-k3s-in-a-cluster-of-three-nodes-18fd)
+- [etcd](https://fernandosilva.me/3-node-k3s-cluster-with-etcd-and-metallb-4ddc7dcfb303)
+- [docker registry](https://rpi4cluster.com/k3s-docker-registry/)
+- [image version managment](https://crazymax.dev/diun/providers/kubernetes/)
+- [renovate](https://docs.renovatebot.com/modules/manager/kubernetes/)
+- [kubevirt](https://community.veeam.com/kubernetes-korner-90/kubevirt-on-k3s-7073)
+  - [ubuntu vm](https://github.com/intel/kubevirt-gfx-sriov/blob/main/docs/deploy-ubuntu-vm.md)
+ imaging and ansible
 - deploy to [GKE](https://cloud.google.com/kubernetes-engine/)
 - deploy to [EKS](https://aws.amazon.com/eks/)
   - [aws provitioning](https://stackoverflow.com/questions/75758115/persistentvolumeclaim-is-stuck-waiting-for-a-volume-to-be-created-either-by-ex)
@@ -144,3 +150,4 @@ services converted from docker compose -> kubectl -> terraform
   - [helm](https://registry.terraform.io/providers/hashicorp/helm/latest/docs)
   - [kubernetes](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs)
 - [.gitignore](https://github.com/github/gitignore/blob/main/Terraform.gitignore)
+- [homelab example](https://eevans.co/blog/open-sourcing-my-homelab/)

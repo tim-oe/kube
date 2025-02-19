@@ -1,0 +1,93 @@
+# https://docs.ansible.com/ansible/latest/collections/community/general/filesystem_module.html
+# https://docs.ansible.com/ansible/latest/collections/ansible/posix/mount_module.html
+# https://docs.ansible.com/ansible/latest/collections/ansible/builtin/find_module.html
+# https://stackoverflow.com/questions/69947414/ansible-check-if-disk-is-mounted-if-not-format-it
+# https://docs.ansible.com/ansible/latest/collections/community/general/parted_module.html
+# this is still iffy the usb drive kept dropping
+# assumes drive is already formatted as raw
+---
+- name: "setup usb storage"
+  hosts: "all"
+  become: true
+  vars:
+    blk_dev: "/dev/sda1"
+    fs_type: "ext4"
+    folder: "/mnt/storage"
+    longhorn_folder: "/var/lib/longhorn"
+    containerd_folder: "/var/lib/rancher/k3s/agent/containerd"
+  tasks:
+    - name: "Create mount if it does not exist"
+      ansible.builtin.file:
+        path: "{{ folder }}"
+        state: "directory"
+        mode: "0777"
+    - name: "Fetch the UUID of {{ blk_dev }}"
+      command: "blkid -s UUID -o value {{ blk_dev }}"
+      changed_when: false
+      register: blk_uuid
+    - name: "Mount {{ blk_dev }} by UUID"
+      ansible.posix.mount:
+        path: "{{ folder }}"
+        src: UUID={{ blk_uuid.stdout }}
+        fstype: "{{ fs_type }}"
+        opts: defaults
+        state: mounted
+    - name: "reload fstab"
+      command: "systemctl daemon-reload"
+    - name: "mount"
+      command: "mount -a"
+    - block:
+      - name: 'collect children'
+        ansible.builtin.find:
+          paths: "{{ folder }}"
+          hidden: True
+          recurse: no
+          file_type: any
+        register: collected_children
+      - name: children
+        debug:
+          msg: "{{ item.path }}"
+        with_items: "{{ collected_children.files }}"
+      - name: clean root storage
+        ansible.builtin.file:
+          path: "{{ item.path }}"
+          state: absent
+        with_items: "{{ collected_children.files }}"
+    - name: "Create longhorn folder if it does not exist"
+      ansible.builtin.file:
+        path: "{{ longhorn_folder }}"
+        state: "directory"
+        mode: "0777"
+    - name: "Create longhorn link if it does not exist"
+      ansible.builtin.file:
+        path: "{{ folder }}/longhorn"
+        state: "directory"
+        mode: "0777"
+    - name: "bind longhorn folder"
+      ansible.posix.mount:
+        path: "{{ longhorn_folder }}"
+        src: "{{ folder }}/longhorn"
+        opts: bind
+        state: mounted
+        fstype: none
+    - name: "Create containerd folder if it does not exist"
+      ansible.builtin.file:
+        path: "{{ containerd_folder }}"
+        state: "directory"
+        mode: "0777"
+    - name: "Create containerd link if it does not exist"
+      ansible.builtin.file:
+        path: "{{ folder }}/containerd"
+        state: "directory"
+        mode: "0777"
+    - name: "bind containerd folder"
+      ansible.posix.mount:
+        path: "{{ containerd_folder }}"
+        src: "{{ folder }}/containerd"
+        opts: bind
+        state: mounted
+        fstype: none
+    - name: "reload fstab"
+      command: "systemctl daemon-reload"
+    - name: "mount"
+      command: "mount -a"

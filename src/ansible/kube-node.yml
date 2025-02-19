@@ -1,0 +1,44 @@
+# https://anthonynsimon.com/blog/kubernetes-cluster-raspberry-pi/#what-is-k3s-and-how-is-it-different-than-kubernetes
+# http://armand.nz/notes/k3s/Kubernetes%20Cluster%20on%20Raspberry%20Pi%20using%20Ubuntu%2022.04%20LTS%20and%20K3s
+# https://docs.k3s.io/installation/uninstall
+---
+- name: "setup kube worker nodes"
+  hosts: "all"
+  become: true
+  gather_facts: yes
+  vars:
+    cmd_file: "/boot/firmware/cmdline.txt"
+    k3s_install: "/opt/k3ssetup"
+  tasks:
+    - name: get ctlr host
+      ansible.builtin.set_fact:
+        ctlr_host: "{{ lookup('env', 'KUBE_CTLR_HOST') }}"
+      delegate_to: localhost
+    - name: get k3s version
+      ansible.builtin.set_fact:
+        k3s_version : "{{ lookup('env', 'K3S_VERSION') }}"
+      delegate_to: localhost
+    - name: get k3s token
+      ansible.builtin.slurp:
+        src: /var/lib/rancher/k3s/server/node-token
+      register: node_token
+      delegate_to: tec-kube-pi-ctlr
+    - name: "gather service facts"
+      ansible.builtin.service_facts: null
+    - name: "remove past install if exists"
+      ansible.builtin.file:
+        path: "{{ k3s_install }}"
+        state: "absent"
+    - name: "Download k3s script."
+      get_url:
+        url: "https://get.k3s.io"
+        dest: "{{ k3s_install }}"
+        mode: 700
+      when: ansible_facts.services['k3s.service'] is undefined
+    - name: "Install k3s."
+      environment:
+        INSTALL_K3S_VERSION: "{{ k3s_version }}"
+        K3S_URL: "https://{{ ctlr_host }}:6443"
+        K3S_TOKEN: "{{ node_token['content'] | b64decode | trim }}"
+      shell: "{{ k3s_install }}"
+      when: ansible_facts.services['k3s.service'] is undefined

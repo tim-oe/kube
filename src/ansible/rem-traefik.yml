@@ -1,6 +1,6 @@
 ---
 - name: "disable and remove traefik"
-  hosts: "kube_controller"
+  hosts: "all"
   become: true
   become_user: "root"
   vars:

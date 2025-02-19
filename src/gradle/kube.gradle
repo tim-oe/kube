@@ -24,6 +24,27 @@ tasks.register('updateKubectl') {
     }
 }
 
+// https://kubevirt.io/user-guide/user_workloads/virtctl_client_tool/
+tasks.register('updateKubevirt') {
+    description = 'update kubevirt'
+    group = "utils"
+    doLast {
+        exec {
+            workingDir '.'
+            commandLine 'bash', '-c',
+                    'wget https://github.com/kubevirt/kubevirt/releases/download/$(curl https://storage.googleapis.com/kubevirt-prow/release/kubevirt/kubevirt/stable.txt)/virtctl-$(curl https://storage.googleapis.com/kubevirt-prow/release/kubevirt/kubevirt/stable.txt)-linux-arm64 -o virtctl'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'sudo', 'mv', 'virtctl', '/usr/local/bin/'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'sudo', 'chmod', '777', '/usr/local/bin/virtctl'
+        }
+    }
+}
+
 // https://blog.devgenius.io/kubernetes-resource-discovery-how-to-list-all-resources-in-a-namespace-555d4e662cfd
 tasks.register('deleteAll') {
     doLast {
@@ -365,9 +386,7 @@ tasks.register('loadUpgradeCtlr') {
             from layout.projectDirectory.dir('src/kube/upgradeController/upgrade-plan.yml')
             into layout.buildDirectory
             include 'upgrade-plan.yml'
-            expand(
-                    k3s_version: "${K3S_VERSION}"
-                    )
+            expand(k3s_version: "${K3S_VERSION}")
         }
         exec {
             workingDir '.'
@@ -377,33 +396,17 @@ tasks.register('loadUpgradeCtlr') {
         exec {
             workingDir '.'
             commandLine 'kubectl', 'apply', '-f',
-                    "https://github.com/rancher/system-upgrade-controller/releases/download/${SYSTEM_UPGRADE_CONTROLLER_VERSION}/crd.yaml"
+                    "https://github.com/rancher/system-upgrade-controller/releases/latest/download/crd.yaml"
         }
         exec {
             workingDir '.'
             commandLine 'kubectl', 'apply', '-f',
-                    "https://github.com/rancher/system-upgrade-controller/releases/download/${SYSTEM_UPGRADE_CONTROLLER_VERSION}/system-upgrade-controller.yaml"
+                    "https://github.com/rancher/system-upgrade-controller/releases/latest/download/system-upgrade-controller.yaml"
         }
         exec {
             workingDir '.'
             commandLine 'kubectl', 'apply', '-f',
                     "build/upgrade-plan.yml"
-        }
-        exec {
-            workingDir '.'
-            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-n1', 'k3s-upgrade=true'
-        }
-        exec {
-            workingDir '.'
-            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-n2', 'k3s-upgrade=true'
-        }
-        exec {
-            workingDir '.'
-            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-n3', 'k3s-upgrade=true'
-        }
-        exec {
-            workingDir '.'
-            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-ctlr', 'k3s-upgrade=true'
         }
     }
 }
@@ -413,24 +416,6 @@ tasks.register('rmUpgradeCtlr', GradleBuild) {
     group = "container"
     startParameter.projectProperties = ['namespace':'system-upgrade']
     tasks = ['deleteAll']
-    doLast {
-        exec {
-            workingDir '.'
-            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-n1', 'k3s-upgrade-'
-        }
-        exec {
-            workingDir '.'
-            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-n2', 'k3s-upgrade-'
-        }
-        exec {
-            workingDir '.'
-            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-n3', 'k3s-upgrade-'
-        }
-        exec {
-            workingDir '.'
-            commandLine 'kubectl', 'label', '--overwrite', 'node', 'tec-kube-ctlr', 'k3s-upgrade-'
-        }
-    }
 }
 
 // https://longhorn.io/docs/1.7.2/
@@ -491,11 +476,10 @@ tasks.register('rmLonghorn') {
             workingDir '.'
             commandLine 'kubectl','get','job/longhorn-uninstall','-n','longhorn-system','-w'
         }
-
     }
 }
 
-// only run after 
+// only run after uninstall job completes
 tasks.register('delLonghorn', GradleBuild) {
     description = 'remove longhorn storage from kube'
     group = "container"
@@ -508,3 +492,55 @@ tasks.register('delLonghorn', GradleBuild) {
         }
     }
 }
+
+// https://kubevirt.io/quickstart_kind/
+tasks.register('loadKubevirt') {
+    description = 'install kubevirt'
+    group = "kube"
+
+    doLast {
+        exec {
+            workingDir '.'
+            commandLine 'bash', '-c',
+                    'kubectl apply -f https://github.com/kubevirt/kubevirt/releases/download/$(curl -s https://storage.googleapis.com/kubevirt-prow/release/kubevirt/kubevirt/stable.txt)/kubevirt-operator.yaml'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'bash', '-c',
+                    'kubectl apply -f https://github.com/kubevirt/kubevirt/releases/download/$(curl -s https://storage.googleapis.com/kubevirt-prow/release/kubevirt/kubevirt/stable.txt)/kubevirt-cr.yaml'
+        }
+    }
+}
+
+tasks.register('delKubevirt', GradleBuild) {
+    description = 'remove Kubevirt'
+    group = "container"
+    startParameter.projectProperties = ['namespace':'kubevirt']
+    tasks = ['deleteAll']
+    // doFirst {
+    //     exec {
+    //         workingDir '.'
+    //         commandLine 'kubectl', 'delete', 'priorityclasses.scheduling.k8s.io', 'kubevirt-cluster-critical', '--ignore-not-found=true'
+    //     }
+    //     exec {
+    //         workingDir '.'
+    //         commandLine 'kubectl', 'delete', 'clusterroles.rbac.authorization.k8s.io', 'kubevirt.io:operator', '--ignore-not-found=true'
+    //     }
+    //     exec {
+    //         workingDir '.'
+    //         commandLine 'kubectl', 'delete', 'clusterroles.rbac.authorization.k8s.io', 'kubevirt-operator', '--ignore-not-found=true'
+    //     }
+    //     exec {
+    //         workingDir '.'
+    //         commandLine 'kubectl', 'delete', 'clusterrolebindings.rbac.authorization.k8s.io', 'kubevirt-operator', '--ignore-not-found=true'
+    //     }
+    // }
+    doLast {
+        exec {
+            workingDir '.'
+            commandLine 'kubectl', 'delete', 'crd', 'kubevirts.kubevirt.io', '--ignore-not-found=true'
+        }
+    }
+}
+
+

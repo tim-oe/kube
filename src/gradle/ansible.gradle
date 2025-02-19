@@ -1,5 +1,5 @@
 tasks.register('resetHost') {
-    description = 'reset known host for tec-test'
+    description = 'reset known host'
     group = "hosts"
     doLast {
         exec {
@@ -30,13 +30,47 @@ tasks.register('playbook') {
     }
 }
 
+// generic task to run ansible playbook for given host
+tasks.register('hostPlaybook') {
+    group = "ansible"
+    doLast {
+    }
+    if (project.hasProperty('ansible_playbook')) {
+        exec {
+            workingDir '.'
+            commandLine 'bash', '-c',
+                    'ansible-playbook ' +
+                    '-i ' +
+                    "${target_host}, " +
+                    "${ansible_playbook}"
+        }
+    } else {
+        println "need to set -Ptarget_host=[hostname] -Pansible_playbook=[src relative path to playbook.yml file]"
+    }
+}
+
+tasks.register('kubeCtlr', GradleBuild) {
+    description = 'run ansible kube controller script'
+    group = "ansible"
+    startParameter.projectProperties = ['ansible_playbook':'src/ansible/kube-ctlr.yml']
+    tasks = ['hostPlaybook']
+}
+
+tasks.register('kubeNode', GradleBuild) {
+    description = 'run ansible kube node script'
+    group = "ansible"
+    startParameter.projectProperties = ['ansible_playbook':'src/ansible/kube-node.yml']
+    tasks = ['hostPlaybook']
+}
+
+
 // https://anthonynsimon.com/blog/kubernetes-cluster-raspberry-pi/#what-is-k3s-and-how-is-it-different-than-kubernetes
 // http://armand.nz/notes/k3s/Kubernetes%20Cluster%20on%20Raspberry%20Pi%20using%20Ubuntu%2022.04%20LTS%20and%20K3s
 tasks.register('kubeCommon', GradleBuild) {
     description = 'run ansible kube common script'
     group = "ansible"
-    startParameter.projectProperties = ['ansible_playbook':'src/ansible/pi/kube-common.yml']
-    tasks = ['playbook']
+    startParameter.projectProperties = ['ansible_playbook':'src/ansible/kube-common.yml']
+    tasks = ['hostPlaybook']
 }
 
 // https://forums.raspberrypi.com/viewtopic.php?t=291640
@@ -47,20 +81,8 @@ tasks.register('kubeCommon', GradleBuild) {
 tasks.register('device', GradleBuild) {
     description = 'run ansible script to configure device settings'
     group = "ansible"
-    startParameter.projectProperties = ['ansible_playbook':'src/ansible/pi/device-settings.yml']
-    tasks = ['playbook']
-}
-
-// https://anthonynsimon.com/blog/kubernetes-cluster-raspberry-pi/#what-is-k3s-and-how-is-it-different-than-kubernetes
-// http://armand.nz/notes/k3s/Kubernetes%20Cluster%20on%20Raspberry%20Pi%20using%20Ubuntu%2022.04%20LTS%20and%20K3s
-// https://docs.k3s.io/installation/uninstall
-// TODO remove traefik https://qdnqn.com/k3s-remove-traefik/
-// use system upgrade controller instead
-tasks.register('k3sCtlrUpdate', GradleBuild) {
-    description = 'run ansible k3s ctrl update script'
-    group = "ansible"
-    startParameter.projectProperties = ['ansible_playbook':'src/ansible/pi/kube-ctlr-upgrade.yml']
-    tasks = ['playbook']
+    startParameter.projectProperties = ['ansible_playbook':'src/ansible/device-settings.yml']
+    tasks = ['hostPlaybook']
 }
 
 // https://github.com/k3s-io/k3s/issues/1160
@@ -69,8 +91,8 @@ tasks.register('k3sCtlrUpdate', GradleBuild) {
 tasks.register('rmTraefik', GradleBuild) {
     description = 'run ansible remove traefik controller script'
     group = "ansible"
-    startParameter.projectProperties = ['ansible_playbook':'src/ansible/pi/rem-traefik.yml']
-    tasks = ['playbook']
+    startParameter.projectProperties = ['ansible_playbook':'src/ansible/rem-traefik.yml']
+    tasks = ['hostPlaybook']
     doLast {
         exec {
             workingDir '.'
@@ -79,23 +101,12 @@ tasks.register('rmTraefik', GradleBuild) {
     }
 }
 
-// https://docs.k3s.io/upgrades
-// use system upgrade controller instead
-// https://docs.k3s.io/upgrades/automated
-// https://github.com/rancher/system-upgrade-controller
-tasks.register('k3sNodeUpdate', GradleBuild) {
-    description = 'run ansible k3s node update script'
-    group = "ansible"
-    startParameter.projectProperties = ['ansible_playbook':'src/ansible/pi/kube-node-upgrade.yml']
-    tasks = ['playbook']
-}
-
 // https://pimylifeup.com/raspberry-pi-nfs/
 // https://www.phillipsj.net/posts/k3s-enable-nfs-storage/
 tasks.register('nfsServer', GradleBuild) {
     description = 'run ansible nfs server script'
     group = "ansible"
-    startParameter.projectProperties = ['ansible_playbook':'src/ansible/pi/nfs-server.yml']
+    startParameter.projectProperties = ['ansible_playbook':'src/ansible/nfs-server.yml']
     tasks = ['playbook']
 }
 
@@ -104,18 +115,7 @@ tasks.register('nfsServer', GradleBuild) {
 tasks.register('nfsClient', GradleBuild) {
     description = 'run ansible nfs client script'
     group = "ansible"
-    startParameter.projectProperties = ['ansible_playbook':'src/ansible/pi/nfs-client.yml']
-    tasks = ['playbook']
-}
-
-// hack for issue with service not finding the network interface
-// this forces service on eth0
-// it also makes sure SSH is running
-// https://askubuntu.com/questions/1217252/boot-process-hangs-at-systemd-networkd-wait-online
-tasks.register('sysdNetWait', GradleBuild) {
-    description = 'run ansible systemd newtork wait script'
-    group = "ansible"
-    startParameter.projectProperties = ['ansible_playbook':'src/ansible/pi/systemd-networkd-wait-online.yml']
+    startParameter.projectProperties = ['ansible_playbook':'src/ansible/nfs-client.yml']
     tasks = ['playbook']
 }
 
@@ -123,15 +123,35 @@ tasks.register('sysdNetWait', GradleBuild) {
 tasks.register('cacert', GradleBuild) {
     description = 'run ansible ca cert script'
     group = "ansible"
-    startParameter.projectProperties = ['ansible_playbook':'src/ansible/pi/ca-cert.yml']
-    tasks = ['playbook']
+    startParameter.projectProperties = ['ansible_playbook':'src/ansible/ca-cert.yml']
+    tasks = ['hostPlaybook']
 }
 
-//add usb drive mounts to nodes
-// not working as is
-// tasks.register('nodeMount', GradleBuild) {
-//     description = 'add usb mounts to kube nodes'
-//     group = "ansible"
-//     startParameter.projectProperties = ['ansible_playbook':'src/ansible/pi/node-storage.yml']
-//     tasks = ['playbook']
-// }
+//add usb drive mounts to and folder binds
+tasks.register('nodeStorage', GradleBuild) {
+    description = 'add usb mounts to kube nodes'
+    group = "ansible"
+    startParameter.projectProperties = ['ansible_playbook':'src/ansible/node-storage.yml']
+    tasks = ['hostPlaybook']
+}
+
+tasks.register('rmk3s', GradleBuild) {
+    description = 'remove k3s'
+    group = "ansible"
+    startParameter.projectProperties = ['ansible_playbook':'src/ansible/rem-k3s.yml']
+    tasks = ['hostPlaybook']
+}
+
+tasks.register('sites', GradleBuild) {
+    description = 'deploy site configs'
+    group = "ansible"
+    startParameter.projectProperties = ['ansible_playbook':'src/ansible/nginx.yml']
+    tasks = ['hostPlaybook']
+}
+
+tasks.register('fixWait', GradleBuild) {
+    description = 'fix wait online issue...'
+    group = "ansible"
+    startParameter.projectProperties = ['ansible_playbook':'src/ansible/systemd-networkd-wait-online.yml']
+    tasks = ['hostPlaybook']
+}

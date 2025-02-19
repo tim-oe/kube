@@ -1,0 +1,61 @@
+---
+- name: "remove k3s"
+  hosts: "all"
+  become: true
+  gather_facts: yes
+  vars:
+    k3s_killall: "/usr/local/bin/k3s-killall.sh"
+    k3s_uninstall_ctlr: "/usr/local/bin/k3s-uninstall.sh"
+    k3s_uninstall_agent: "/usr/local/bin/k3s-agent-uninstall.sh"
+    longhorn_folder: "/var/lib/longhorn"
+    containerd_folder: "/var/lib/rancher/k3s/agent/containerd"
+  tasks:
+    - name: "gather service facts"
+      ansible.builtin.service_facts: null
+    - block:
+      - name: "kill k3s."
+        shell: "{{ k3s_killall }}"
+      - name: "check if {{ k3s_uninstall_ctlr }} is present"
+        stat:
+          path: "{{ k3s_uninstall_ctlr }}"
+        register: ctlr
+      - block:
+        - name: "remove ctlr."
+          shell: "{{ k3s_uninstall_ctlr }}"
+        when: ctlr.stat.exists
+      - name: "check if {{ k3s_uninstall_agent }} is present"
+        stat:
+          path: "{{ k3s_uninstall_agent }}"
+        register: agent
+      - block:
+        - name: "remove agent."
+          shell: "{{ k3s_uninstall_agent }}"
+        when: agent.stat.exists
+    - block:
+      - name: 'collect children'
+        ansible.builtin.find:
+          paths: 
+            - "{{ longhorn_folder }}"
+            - "{{ containerd_folder }}"
+          hidden: True
+          recurse: no
+          file_type: any
+        register: collected_children
+      - name: children
+        debug:
+          msg: "{{ item.path }}"
+        with_items: "{{ collected_children.files }}"
+      - name: clean folders
+        ansible.builtin.file:
+          path: "{{ item.path }}"
+          state: absent
+        with_items: "{{ collected_children.files }}"
+    - name: "Reboot"
+      reboot:
+        msg: "Reboot initiated by Ansible for device changes"
+        connect_timeout: 5
+        reboot_timeout: 300
+        pre_reboot_delay: 0
+        post_reboot_delay: 10
+        test_command: "uptime"
+      when: ansible_facts.services['k3s.service'] is defined

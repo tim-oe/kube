@@ -2,30 +2,31 @@
 # http://armand.nz/notes/k3s/Kubernetes%20Cluster%20on%20Raspberry%20Pi%20using%20Ubuntu%2022.04%20LTS%20and%20K3s
 # https://docs.k3s.io/installation/uninstall
 ---
-- name: "setup kube controller node"
-  hosts: "kube_controller"
+- name: "setup kube controller"
+  hosts: "all"
   become: true
-  become_user: "root"
+  gather_facts: yes
   vars:
-    cmd_file: "/boot/firmware/cmdline.txt"
     k3s_install: "/opt/k3ssetup"
   tasks:
-    - ansible.builtin.name: "call common tasks"
-      ansible.builtin.import_tasks:
-        file: "kube-common.yml"
-     - name: "Install ctrl dependencies"
-      ansible.builtin.apt:
-        pkg:
-          - "nginx"
-        state: "present"
+    - name: get k3s version
+      ansible.builtin.set_fact:
+        k3s_version : "{{ lookup('env', 'K3S_VERSION') }}"
+      delegate_to: localhost
     - name: "gather service facts"
       ansible.builtin.service_facts: null
+    - name: "remove past install if exists"
+      ansible.builtin.file:
+        path: "{{ k3s_install }}"
+        state: "absent"
     - name: "Download k3s script."
       get_url:
         url: "https://get.k3s.io"
         dest: "{{ k3s_install }}"
         mode: 700
-      when: "ansible_facts.services['k3s.service'] is undefined"
+      when: ansible_facts.services['k3s.service'] is undefined
     - name: "Install k3s."
+      environment:
+        INSTALL_K3S_VERSION: "{{ k3s_version }}"
       shell: "{{ k3s_install }}"
-      when: "ansible_facts.services['k3s.service'] is undefined"
+      when: ansible_facts.services['k3s.service'] is undefined

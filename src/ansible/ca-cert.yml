@@ -1,9 +1,8 @@
 # https://superuser.com/questions/437330/how-do-you-add-a-certificate-authority-ca-to-ubuntu
 ---
 - name: "add local cert authority"
-  hosts: "kube_all"
+  hosts: "all"
   become: true
-  become_user: "root"
   tasks:
     - name: "Update apt repo and cache."
       apt:

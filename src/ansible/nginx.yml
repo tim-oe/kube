@@ -1,0 +1,32 @@
+---
+- name: "deploy nginx configs"
+  hosts: "all"
+  become: true  
+  vars:
+    ssl_dir: "/etc/nginx/ssl"
+  tasks:
+    - name: copy site config 
+      copy:
+        src: "{{ item }}"
+        dest: /etc/nginx/sites-available/
+        owner: root
+        group: root
+        mode: 0644
+      with_fileglob:
+        - "{{ playbook_dir }}/../conf/etc/nginx/sites-available/*.conf"
+    - name: "Create ssl folder"
+      ansible.builtin.file:
+        path: "{{ ssl_dir }}"
+        state: "directory"
+        owner: root
+        group: root
+        mode: "0755"
+    - name: copy ssl file 
+      copy:
+        src: "{{ item }}"
+        dest: "{{ ssl_dir }}"
+        owner: root
+        group: root
+        mode: 0644
+      with_fileglob:
+        - "/mnt/clones/data/keys/kube/*.pem"

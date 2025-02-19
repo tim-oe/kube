@@ -2,11 +2,11 @@
 # https://askubuntu.com/questions/1217252/boot-process-hangs-at-systemd-networkd-wait-online
 ---
 - name: "Hack systemd-networkd-wait-online to use eth0."
-  hosts: "kube_all"
+  hosts: "all"
   become: true
-  become_user: "root"
   vars:
     svc: "systemd-networkd-wait-online"
+    device: enp2s0
   tasks:
     - name: "Create override directory."
       file:
@@ -31,7 +31,7 @@
         mode: 644
         section: "Service"
         option: "ExecStart"
-        value: "/usr/lib/systemd/{{ svc }} --interface=eth0"
+        value: "/usr/lib/systemd/{{ svc }} --interface={{ device }}"
         exclusive: false
     - name: "Gather service facts."
       ansible.builtin.service_facts: null

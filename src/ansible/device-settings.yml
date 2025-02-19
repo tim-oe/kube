@@ -5,9 +5,8 @@
 # backup file creation causing errors
 ---
 - name: "change pi device settings"
-  hosts: "kube_all"
+  hosts: "all"
   become: true
-  become_user: "root"
   vars:
     config_file: "/boot/firmware/config.txt"
     disable_wifi: "dtoverlay=disable-wifi"
@@ -19,6 +18,10 @@
     disable_eth_led0: "dtparam=eth_led0=14"
     disable_eth_led1: "dtparam=eth_led1=14"
   tasks:
+    - name: fail if not pi
+      fail:
+        msg: "not a pi!!!!"
+      when: ansible_facts['machine'] == 'aarch64'
     - name: "Check if wifi already disabled."
       lineinfile:
         state: "absent"

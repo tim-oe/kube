@@ -1,0 +1,109 @@
+# https://anthonynsimon.com/blog/kubernetes-cluster-raspberry-pi/#what-is-k3s-and-how-is-it-different-than-kubernetes
+# http://armand.nz/notes/k3s/Kubernetes%20Cluster%20on%20Raspberry%20Pi%20using%20Ubuntu%2022.04%20LTS%20and%20K3s---
+# https://longhorn.io/kb/troubleshooting-volume-with-multipath/
+# https://longhorn.io/docs/1.7.2/nodes-and-volumes/nodes/node-conditions/
+# TODO: cat /proc/cpuinfo  | egrep -o 'Raspberry Pi'
+- name: "Install k3s dependencies"
+  hosts: "all"
+  become: true
+  gather_facts: yes
+  vars:
+    pi_arch: ['aarch64']
+    cmd_file: "/boot/firmware/cmdline.txt"
+    mod_file: "/etc/modules-load.d/longhorn.conf"
+    multiline: |
+          dm_crypt
+          iscsi_tcp
+  tasks:
+    - name: fail if bad arch
+      fail:
+        msg: "you just moved the headstones!!!!"
+      when: ansible_facts['machine'] == 'armv7l'
+    - name: "Install k3s dependencies"
+      ansible.builtin.apt:
+        pkg:
+          - "libvirt-clients"
+          - "open-iscsi"
+          - "nfs-common"
+          - "util-linux"
+          - "cryptsetup"
+          - "dmsetup"
+          - "jq"
+          - "htop"
+        state: "present"
+    - block:
+      - name: "Install k3s rpi dependencies"
+        ansible.builtin.apt:
+          pkg:
+            - "linux-tools-raspi"
+            - "linux-modules-extra-raspi"
+          state: "present"
+      when: ansible_facts['machine'] in pi_arch
+    - name: "remove k3s conflicts"
+      ansible.builtin.apt:
+        pkg:
+          - "multipath-tools"
+        state: "absent"
+    - name: "Remove unused packages from the cache"
+      apt:
+        autoclean: true
+    - name: "Remove dependencies that are no longer required"
+      apt:
+        autoremove: true
+    - name: Enable iscsid
+      ansible.builtin.systemd_service:
+        name: iscsid
+        enabled: true
+        masked: no
+        state: "started"
+    - block:
+      - name: "Check if docker cmd settings present."
+        lineinfile:
+          state: "absent"
+          path: "{{ cmd_file }}"
+          regexp: ".*cgroup_enable=cpuset.*"
+        check_mode: true
+        changed_when: false
+        register: "cmd_docker"
+      - name: "Append docker settings to cmdline config."
+        lineinfile:
+          path: "{{ cmd_file }}"
+          backrefs: true
+          regexp: "^(console=serial0.*)$"
+          line: "\\1 cgroup_enable=cpuset cgroup_enable=memory cgroup_memory=1 swapaccount=1"
+        when: cmd_docker.found == 0
+      when: ansible_facts['machine'] in pi_arch
+    - name: "longhorn crypt mod dep"
+      copy:
+        dest: "{{ mod_file }}"
+        content: "{{ multiline }}"
+      register: "load_mod"
+    - name: "cmd_docker"
+      debug:
+        msg: "{{ cmd_docker }}"
+    - name: "load_mod"
+      debug:
+        msg: "{{ load_mod }}"
+    - name: "Reboot to pickup cmdline changes."
+      reboot:
+        msg: "Reboot"
+        connect_timeout: 5
+        reboot_timeout: 300
+        pre_reboot_delay: 0
+        post_reboot_delay: 10
+        test_command: "uptime"
+    - name: "test dm_crypt module"
+      #ansible.builtin.shell: 'lsmod | egrep -o  dm_crypt | head -1'
+      ansible.builtin.shell: 
+        executable: /bin/bash
+        cmd: 'modprobe -n --first-time dm_crypt >& /dev/null && echo "no" || echo "yes"'
+      register: dm_crypt
+    - name: "test iscsi_tcp module"
+      ansible.builtin.shell: 
+        executable: /bin/bash
+        cmd: 'modprobe -n --first-time iscsi_tcp >& /dev/null && echo "no" || echo "yes"'
+      register: iscsi_tcp
+    - name: fail if modules not loaded
+      fail:
+        msg: "iscsi_tcp {{iscsi_tcp.stdout}} dm_crypt {{dm_crypt.stdout}}"
+      when: iscsi_tcp.stdout != 'yes' or dm_crypt.stdout != 'yes'
