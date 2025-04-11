@@ -1,12 +1,15 @@
 # it also makes sure SSH is running
-# https://askubuntu.com/questions/1217252/boot-process-hangs-at-systemd-networkd-wait-online
+# TODO check for netmanager is present...
+# https://askubuntu.com/questions/1217252/boot-process-hangs-at-systemd-networkd-wait-online/1501504#1501504
 ---
 - name: "Hack systemd-networkd-wait-online to use eth0."
   hosts: "all"
   become: true
-  vars:
+  vars: 
     svc: "systemd-networkd-wait-online"
-    device: enp2s0
+    device: enp1s0
+    # kvm bridge device
+    # device: kvmbr0
   tasks:
     - name: "Create override directory."
       file:

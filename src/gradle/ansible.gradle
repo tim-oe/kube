@@ -128,10 +128,17 @@ tasks.register('cacert', GradleBuild) {
 }
 
 //add usb drive mounts to and folder binds
-tasks.register('nodeStorage', GradleBuild) {
+tasks.register('usbNodeStorage', GradleBuild) {
     description = 'add usb mounts to kube nodes'
     group = "ansible"
-    startParameter.projectProperties = ['ansible_playbook':'src/ansible/node-storage.yml']
+    startParameter.projectProperties = ['ansible_playbook':'src/ansible/node-storage-usb.yml']
+    tasks = ['hostPlaybook']
+}
+
+tasks.register('ssdNodeStorage', GradleBuild) {
+    description = 'add ssd mounts to kube nodes'
+    group = "ansible"
+    startParameter.projectProperties = ['ansible_playbook':'src/ansible/node-storage-ssd.yml']
     tasks = ['hostPlaybook']
 }
 

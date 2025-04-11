@@ -30,6 +30,9 @@
           - "dmsetup"
           - "jq"
           - "htop"
+          - "lshw"
+          - "nano"
+          - "iputils-ping"
         state: "present"
     - block:
       - name: "Install k3s rpi dependencies"
@@ -93,7 +96,6 @@
         post_reboot_delay: 10
         test_command: "uptime"
     - name: "test dm_crypt module"
-      #ansible.builtin.shell: 'lsmod | egrep -o  dm_crypt | head -1'
       ansible.builtin.shell: 
         executable: /bin/bash
         cmd: 'modprobe -n --first-time dm_crypt >& /dev/null && echo "no" || echo "yes"'
