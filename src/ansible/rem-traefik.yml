@@ -4,7 +4,7 @@
   become: true
   become_user: "root"
   vars:
-    systemd_file: "/etc/systemd/system/k3s.service"
+    svc: "k3s"
   tasks:
     - name: "Remove treafik chart"
       ansible.builtin.file:
@@ -14,11 +14,31 @@
       ansible.builtin.file:
         path: "/var/lib/rancher/k3s/server/manifests/traefik.yaml.skip"
         state: "touch"
-    - name: "add traefik disable to k3s service"
-      ansible.builtin.replace:
-        path: "{{ systemd_file }}"
-        regexp: "(?s)^ExecStart=.*server.*\\\\"
-        replace: "ExecStart=/usr/local/bin/k3s server --disable=traefik"
+    - name: "create override directory."
+      file:
+        owner: "root"
+        group: "root"
+        mode: "0755"
+        path: "/etc/systemd/system/{{ svc }}.service.d"
+        state: "directory"
+    - name: "create override file."
+      community.general.ini_file:
+        dest: "/etc/systemd/system/{{ svc }}.service.d/override.conf"
+        owner: "root"
+        group: "root"
+        mode: 644
+        section: "Service"
+        option: "ExecStart"
+        value: ""
+        exclusive: false
+    - name: "Set exec start full command."
+      community.general.ini_file:
+        dest: "/etc/systemd/system/{{ svc }}.service.d/override.conf"
+        mode: 644
+        section: "Service"
+        option: "ExecStart"
+        value: "/usr/local/bin/{{ svc }} server --disable=traefik"
+        exclusive: false
     - name: "reload k3s server"
       ansible.builtin.systemd_service:
         state: "restarted"

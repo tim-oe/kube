@@ -88,6 +88,7 @@ tasks.register('device', GradleBuild) {
 // https://github.com/k3s-io/k3s/issues/1160
 // https://medium.com/@bilsted/how-to-disable-traefik-and-metrics-server-on-k3s-b7dab4ca3aae
 // https://qdnqn.com/k3s-remove-traefik/
+// NOTE make sure kubectl is properly configured
 tasks.register('rmTraefik', GradleBuild) {
     description = 'run ansible remove traefik controller script'
     group = "ansible"
