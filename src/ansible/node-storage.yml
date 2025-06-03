@@ -3,33 +3,71 @@
 # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/find_module.html
 # https://stackoverflow.com/questions/69947414/ansible-check-if-disk-is-mounted-if-not-format-it
 # https://docs.ansible.com/ansible/latest/collections/community/general/parted_module.html
-# this is for pc systems with ssd storage
+# this is still iffy the usb drive kept dropping
+# assumes drive is already formatted as raw
 ---
-- name: "setup ssd storage"
+- name: "setup usb storage"
   hosts: "all"
   become: true
   vars:
-    blk_dev: "/dev/nvme0n1"
+    blk_dev: "/dev/sda"
     fs_type: "ext4"
     folder: "/mnt/storage"
     longhorn_folder: "/var/lib/longhorn"
     containerd_folder: "/var/lib/rancher/k3s/agent/containerd"
   tasks:
-    - name: Create an xfs filesystem on /dev/sda5
-      community.general.filesystem:
-        fstype: "{{ fs_type }}"
+    - name: Check if target drive exists
+      stat:
+        path: "{{ blk_dev }}"
+      register: drive_stat
+    - name: Fail if target drive does not exist
+      fail:
+        msg: "Target drive {{ blk_dev }} does not exist"
+      when: not drive_stat.stat.exists
+    - name: "Unmount {{ folder }}"
+      shell: |
+        umount -A "{{ blk_dev }}1" 2>/dev/null || true
+      ignore_errors: yes
+    - name: Unmount "{{ folder }}"
+      ansible.posix.mount:
+        path: "{{ folder }}"
+        state: absent_from_fstab
+    - name: Unmount "{{ longhorn_folder }}"
+      ansible.posix.mount:
+        path: "{{ longhorn_folder }}"
+        state: absent_from_fstab
+    - name: Unmount "{{ containerd_folder }}"
+      ansible.posix.mount:
+        path: "{{ containerd_folder }}"
+        state: absent_from_fstab
+    - name: "wipe disk {{ blk_dev }}"  
+      command: "wipefs -a {{ blk_dev }}"
+    - name: Create new GPT partition table
+      parted:
+        device: "{{ blk_dev }}"
+        label: gpt
+    - name: Create single partition using all available space
+      parted:
+        device: "{{ blk_dev }}"
+        number: 1
+        part_start: 0%
+        part_end: 100%
         state: present
-        dev: "{{ blk_dev }}"
+    - name: Format partition as ext4
+      filesystem:
+        fstype: ext4
+        dev: "{{ blk_dev }}1"
+        force: yes
     - name: "Create mount if it does not exist"
       ansible.builtin.file:
         path: "{{ folder }}"
         state: "directory"
         mode: "0777"
-    - name: "Fetch the UUID of {{ blk_dev }}"
-      command: "blkid -s UUID -o value {{ blk_dev }}"
+    - name: "Fetch the UUID of {{ blk_dev }}1"
+      command: "blkid -s UUID -o value {{ blk_dev }}1"
       changed_when: false
       register: blk_uuid
-    - name: "Mount {{ blk_dev }} by UUID"
+    - name: "Mount {{ blk_dev }}1 by UUID"
       ansible.posix.mount:
         path: "{{ folder }}"
         src: UUID={{ blk_uuid.stdout }}

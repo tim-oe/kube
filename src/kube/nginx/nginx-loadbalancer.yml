@@ -11,11 +11,11 @@ spec:
     app.kubernetes.io/name: "ingress-nginx"
   ports:
     - name: "http"
-      port: 80
+      port: 8880
       protocol: "TCP"
       targetPort: 80
     - name: "https"
-      port: 443
+      port: 8843
       protocol: "TCP"
       targetPort: 443
   type: "LoadBalancer"

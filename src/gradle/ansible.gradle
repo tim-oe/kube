@@ -129,17 +129,10 @@ tasks.register('cacert', GradleBuild) {
 }
 
 //add usb drive mounts to and folder binds
-tasks.register('usbNodeStorage', GradleBuild) {
-    description = 'add usb mounts to kube nodes'
+tasks.register('nodeStorage', GradleBuild) {
+    description = 'add storage mounts to kube nodes'
     group = "ansible"
-    startParameter.projectProperties = ['ansible_playbook':'src/ansible/node-storage-usb.yml']
-    tasks = ['hostPlaybook']
-}
-
-tasks.register('ssdNodeStorage', GradleBuild) {
-    description = 'add ssd mounts to kube nodes'
-    group = "ansible"
-    startParameter.projectProperties = ['ansible_playbook':'src/ansible/node-storage-ssd.yml']
+    startParameter.projectProperties = ['ansible_playbook':'src/ansible/node-storage.yml']
     tasks = ['hostPlaybook']
 }
 
@@ -154,12 +147,5 @@ tasks.register('sites', GradleBuild) {
     description = 'deploy site configs'
     group = "ansible"
     startParameter.projectProperties = ['ansible_playbook':'src/ansible/nginx.yml']
-    tasks = ['hostPlaybook']
-}
-
-tasks.register('fixWait', GradleBuild) {
-    description = 'fix wait online issue...'
-    group = "ansible"
-    startParameter.projectProperties = ['ansible_playbook':'src/ansible/systemd-networkd-wait-online.yml']
     tasks = ['hostPlaybook']
 }
